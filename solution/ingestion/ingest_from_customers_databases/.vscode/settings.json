@@ -1,6 +1,0 @@
-{
-    "python.analysis.stubPath": "../../../../.stubs/pyspark34",
-    "python.analysis.diagnosticSeverityOverrides": {
-        "reportMissingModuleSource": "none"
-    }
-}
