@@ -197,15 +197,23 @@ All Python scripts should:
 
 ## Git Commit Practices
 
-**Rule:** One logical change per commit.
+**CRITICAL RULE:** Each solved task must be its own commit.
 
-**Good Commit Sequence:**
+**Never batch multiple completed tasks into one commit.** When you solve a task, commit it immediately before moving to the next task.
+
+**Good Commit Sequence (one task per commit):**
 ```
 feat: add shared Fabric REST API client module
 refactor: use shared FabricClient in setup_workspaces.py
 refactor: use shared FabricClient in setup_lakehouses.py
 docs: document shared fabric_client module
 fix: remove WORKSPACE_ID circular dependency from pipelines
+```
+
+**Bad Practice (batching tasks):**
+```
+# ❌ BAD: Multiple unrelated tasks in one commit
+feat: add shared module and update both scripts
 ```
 
 **Commit Message Format:**
@@ -218,6 +226,13 @@ fix: remove WORKSPACE_ID circular dependency from pipelines
 ```
 
 Types: `feat`, `fix`, `refactor`, `docs`, `chore`, `test`
+
+**Workflow:**
+1. Solve one task completely
+2. `git add` only files related to that task
+3. `git commit` with descriptive message
+4. Move to next task
+5. Repeat
 
 ## Data-Driven Configuration
 
@@ -370,7 +385,7 @@ python -m py_compile deploy.py
 4. ❌ Hardcoding workspace/lakehouse names instead of reading from config
 5. ❌ Using `AzureDefaultCredential` instead of `AzureCliCredential`
 6. ❌ Not checking `isinstance()` when iterating YAML with optional properties
-7. ❌ Batching multiple unrelated changes into one commit
+7. ❌ **Batching multiple solved tasks into one commit** - ALWAYS commit each task separately
 8. ❌ Forgetting to update README.md after architectural changes
 
 ## Key Learnings
