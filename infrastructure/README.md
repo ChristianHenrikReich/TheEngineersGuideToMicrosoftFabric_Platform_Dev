@@ -33,7 +33,7 @@ infrastructure/
 
 ```bash
 az deployment sub create \
-  --location norwayeast \
+  --location swedencentral \
   --template-file infrastructure/main.bicep \
   --parameters @infrastructure/parameters/main.dev.parameters.json
 ```
@@ -42,7 +42,7 @@ az deployment sub create \
 
 ```bash
 az deployment sub create \
-  --location norwayeast \
+  --location swedencentral \
   --template-file infrastructure/main.bicep \
   --parameters @infrastructure/parameters/main.tst.parameters.json
 ```
@@ -51,7 +51,7 @@ az deployment sub create \
 
 ```bash
 az deployment sub create \
-  --location norwayeast \
+  --location swedencentral \
   --template-file infrastructure/main.bicep \
   --parameters @infrastructure/parameters/main.prd.parameters.json
 ```
@@ -77,7 +77,7 @@ Infrastructure is deployed automatically via Azure DevOps and GitHub Actions pip
 Edit the `.parameters.json` files in `parameters/` to customize:
 
 - `environment`: Environment name (dev, tst, prd)
-- `location`: Azure region (default: norwayeast)
+- `location`: Azure region (default: swedencentral)
 - `projectName`: Project prefix for resource names (default: lakehouse)
 - `keyVaultSku`: Key Vault SKU (standard or premium, default: standard)
 - `tags`: Resource tags for organization and cost tracking

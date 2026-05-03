@@ -18,7 +18,7 @@ targetScope = 'subscription'
 param environment string
 
 @description('Azure region for resources')
-param location string
+param location string = 'swedencentral'
 
 @description('Project name prefix')
 param projectName string

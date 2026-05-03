@@ -29,7 +29,7 @@ parameters:
   # Workspace selection
   - name: workspaces
     displayName: Workspaces to Deploy
-    type: object
+    type: objec
     default:
       - name: ingestion
         displayName: Ingestion
@@ -120,7 +120,7 @@ stages:
                         inlineScript: |
                           echo "Deploying infrastructure to ${{ env.name }} environment..."
                           az deployment sub create \
-                            --location norwayeast \
+                            --location swedencentral \
                             --template-file infrastructure/main.bicep \
                             --parameters @infrastructure/parameters/main.${{ env.name }}.parameters.json \
                             --name "lakehouse-infra-${{ env.name }}-$(Build.BuildId)"
