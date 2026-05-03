@@ -23,5 +23,7 @@ workspaces:
     # Lakehouse items to create in this workspace
     lakehouses:
       - bronze
-      - gold
       - silver
+    # Warehouse items to create in this workspace
+    warehouses:
+      - gold

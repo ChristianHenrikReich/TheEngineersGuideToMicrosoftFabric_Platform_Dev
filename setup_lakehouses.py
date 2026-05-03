@@ -1,7 +1,7 @@
-"""Setup lakehouses in Fabric workspace using Fabric REST API.
+"""Setup lakehouses and warehouses in Fabric workspace using Fabric REST API.
 
-This script creates lakehouse items in the Fabric workspace using the Fabric REST API.
-Lakehouse names are read from workspaces.yml (data-driven configuration).
+This script creates lakehouse and warehouse items in the Fabric workspace using the Fabric REST API.
+Item names are read from lakehouse_solution.yml (data-driven configuration).
 
 Prerequisites:
     - Azure CLI: az login
@@ -12,9 +12,9 @@ Local usage:
     python setup_lakehouses.py --environment dev
 
 This will:
-1. Read lakehouse names from workspaces.yml
+1. Read lakehouse and warehouse names from lakehouse_solution.yml
 2. Get the target workspace ID for the environment
-3. Create each lakehouse using Fabric REST API
+3. Create each lakehouse and warehouse using Fabric REST API
 """
 
 from __future__ import annotations
@@ -93,6 +93,74 @@ class FabricLakehouseManager(FabricClient):
         return lakehouse_id, True
 
 
+class FabricWarehouseManager(FabricClient):
+    """Manage Fabric warehouses via REST API."""
+
+    def list_warehouses(self, workspace_id: str) -> dict[str, str]:
+        """List all warehouses in a workspace.
+        
+        Args:
+            workspace_id: The workspace ID
+            
+        Returns:
+            Dict mapping warehouse display name to warehouse ID
+        """
+        result = self._api_request("GET", f"/workspaces/{workspace_id}/warehouses")
+        warehouses = {}
+        
+        for warehouse in result.get("value", []):
+            warehouses[warehouse["displayName"]] = warehouse["id"]
+        
+        return warehouses
+
+    def create_warehouse(self, workspace_id: str, warehouse_name: str, description: str = "") -> str:
+        """Create a new warehouse in a workspace.
+        
+        Args:
+            workspace_id: The workspace ID
+            warehouse_name: Warehouse display name
+            description: Optional warehouse description
+            
+        Returns:
+            Warehouse ID
+        """
+        payload = {
+            "displayName": warehouse_name,
+        }
+        if description:
+            payload["description"] = description
+        
+        result = self._api_request("POST", f"/workspaces/{workspace_id}/warehouses", json_data=payload)
+        warehouse_id = result.get("id")
+        
+        if not warehouse_id:
+            raise RuntimeError(f"Failed to create warehouse '{warehouse_name}': no ID returned")
+        
+        print(f"✓ Created warehouse: {warehouse_name} ({warehouse_id})")
+        return warehouse_id
+
+    def get_or_create_warehouse(self, workspace_id: str, warehouse_name: str, description: str = "") -> tuple[str, bool]:
+        """Get existing warehouse ID or create new warehouse.
+        
+        Args:
+            workspace_id: The workspace ID
+            warehouse_name: Warehouse display name
+            description: Optional warehouse description
+            
+        Returns:
+            Tuple of (warehouse_id, was_created)
+        """
+        warehouses = self.list_warehouses(workspace_id)
+        
+        if warehouse_name in warehouses:
+            warehouse_id = warehouses[warehouse_name]
+            print(f"✓ Found existing warehouse: {warehouse_name} ({warehouse_id})")
+            return warehouse_id, False
+        
+        warehouse_id = self.create_warehouse(workspace_id, warehouse_name, description)
+        return warehouse_id, True
+
+
 def get_workspace_id(environment: str) -> str:
     """Get the lakehouse workspace ID for the given environment."""
     config = load_workspace_config()
@@ -133,37 +201,78 @@ def get_lakehouse_names() -> list[str]:
     return [str(name) for name in lakehouses]
 
 
+def get_warehouse_names() -> list[str]:
+    """Get the list of warehouse names from lakehouse_solution.yml."""
+    config = load_workspace_config()
+    
+    if "lakehouse" not in config:
+        raise SystemExit("'lakehouse' workspace not found in lakehouse_solution.yml")
+    
+    lakehouse_config = config["lakehouse"]
+    if "warehouses" not in lakehouse_config:
+        # Warehouses are optional, return empty list if not specified
+        return []
+    
+    warehouses = lakehouse_config["warehouses"]
+    if not isinstance(warehouses, list):
+        raise SystemExit("'warehouses' must be a list")
+    
+    return [str(name) for name in warehouses]
+
+
 def setup_lakehouses(environment: str) -> None:
-    """Setup lakehouses in the Fabric workspace.
+    """Setup lakehouses and warehouses in the Fabric workspace.
     
     Args:
         environment: Target environment (dev/tst/prd)
     """
     workspace_id = get_workspace_id(environment)
     lakehouse_names = get_lakehouse_names()
-    manager = FabricLakehouseManager()
+    warehouse_names = get_warehouse_names()
+    
+    lakehouse_manager = FabricLakehouseManager()
+    warehouse_manager = FabricWarehouseManager()
     
     print(f"\n{'='*70}")
-    print(f"Setting up lakehouses for {environment.upper()} environment")
+    print(f"Setting up Fabric items for {environment.upper()} environment")
     print(f"Workspace ID: {workspace_id}")
-    print(f"Lakehouses to create: {', '.join(lakehouse_names)}")
+    print(f"Lakehouses to create: {', '.join(lakehouse_names) if lakehouse_names else 'None'}")
+    print(f"Warehouses to create: {', '.join(warehouse_names) if warehouse_names else 'None'}")
     print(f"{'='*70}\n")
     
-    created_count = 0
-    for lakehouse_name in lakehouse_names:
-        description = f"{lakehouse_name.title()} lakehouse for {environment.upper()} environment"
-        _, was_created = manager.get_or_create_lakehouse(workspace_id, lakehouse_name, description)
-        if was_created:
-            created_count += 1
+    lakehouse_created_count = 0
+    warehouse_created_count = 0
     
-    print(f"\n{'='*70}")
-    print(f"Summary: {created_count} lakehouse(es) created")
+    # Setup lakehouses
+    if lakehouse_names:
+        print("Creating lakehouses...")
+        for lakehouse_name in lakehouse_names:
+            description = f"{lakehouse_name.title()} lakehouse for {environment.upper()} environment"
+            _, was_created = lakehouse_manager.get_or_create_lakehouse(workspace_id, lakehouse_name, description)
+            if was_created:
+                lakehouse_created_count += 1
+        print()
+    
+    # Setup warehouses
+    if warehouse_names:
+        print("Creating warehouses...")
+        for warehouse_name in warehouse_names:
+            description = f"{warehouse_name.title()} warehouse for {environment.upper()} environment"
+            _, was_created = warehouse_manager.get_or_create_warehouse(workspace_id, warehouse_name, description)
+            if was_created:
+                warehouse_created_count += 1
+        print()
+    
+    print(f"{'='*70}")
+    print(f"Summary:")
+    print(f"  Lakehouses created: {lakehouse_created_count}")
+    print(f"  Warehouses created: {warehouse_created_count}")
     print(f"{'='*70}")
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Setup lakehouses in Fabric workspace using Fabric REST API."
+        description="Setup lakehouses and warehouses in Fabric workspace using Fabric REST API."
     )
     parser.add_argument(
         "--environment", "-e",

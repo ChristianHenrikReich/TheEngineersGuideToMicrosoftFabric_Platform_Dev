@@ -90,8 +90,10 @@ Structure:
   tst: "workspace-id-or-placeholder"
   prd: "workspace-id-or-placeholder"
   lakehouses:  # Optional property for lakehouse workspace
-    - gold
+    - bronze
     - silver
+  warehouses:  # Optional property for warehouse items
+    - gold
 ```
 
 **Key Points:**
@@ -303,17 +305,18 @@ Types: `feat`, `fix`, `refactor`, `docs`, `chore`, `test`
 
 **Rule:** Configuration drives automation, not hardcoded values.
 
-**Example - Lakehouse Names:**
+**Example - Lakehouse and Warehouse Names:**
 ```yaml
-# workspaces.yml
+# lakehouse_solution.yml
 lakehouse:
   dev: "workspace-id"
   tst: "workspace-id"
   prd: "workspace-id"
-  lakehouses:  # Data-driven list
+  lakehouses:  # Data-driven list of lakehouse items
+    - bronze
+    - silver  # Just add here, no code changes needed
+  warehouses:  # Data-driven list of warehouse items
     - gold
-    - silver
-    - bronze  # Just add here, no code changes needed
 ```
 
 **Script automatically processes:**

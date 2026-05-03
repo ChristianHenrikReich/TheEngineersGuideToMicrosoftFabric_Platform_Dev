@@ -33,8 +33,9 @@ During CI/CD deployment, you specify both the workspace type and the environment
     parameter.yml           # Processing-specific parameters
   lakehouse/                # Lakehouse workspace artifacts
     parameter.yml
-    gold.Lakehouse/         # (created by setup_lakehouses.py)
+    bronze.Lakehouse/       # (created by setup_lakehouses.py)
     silver.Lakehouse/       # (created by setup_lakehouses.py)
+    gold.Warehouse/         # (created by setup_lakehouses.py)
 AGENTS.md                   # Rules and architectural decisions for AI agents/developers
 workspaces.yml              # Workspace ID mapping (workspace_type -> environment -> id)
 fabric_client.py            # Shared Fabric REST API client
@@ -137,8 +138,8 @@ not in the repo. Pass `--no-unpublish-orphans` to skip that step.
 
 ## Setup lakehouses
 
-The `setup_lakehouses.py` script creates lakehouse items directly in your Fabric 
-workspace using the Fabric REST API. Lakehouse names are defined in 
+The `setup_lakehouses.py` script creates lakehouse and warehouse items directly in your Fabric 
+workspace using the Fabric REST API. Item names are defined in 
 `lakehouse_solution.yml` (data-driven configuration).
 
 Prerequisites:
@@ -150,25 +151,26 @@ az login
 
 Usage:
 ```bash
-# Create lakehouses in the dev environment
+# Create lakehouses and warehouses in the dev environment
 python setup_lakehouses.py --environment dev
 
-# Create lakehouses in production
+# Create lakehouses and warehouses in production
 python setup_lakehouses.py --environment prd
 ```
 
 This will:
-1. Read lakehouse names from `lakehouse_solution.yml` (`lakehouses` list)
+1. Read lakehouse and warehouse names from `lakehouse_solution.yml`
 2. Get the target workspace ID for the specified environment
-3. Create each lakehouse using `fabric lakehouse create` CLI commands
-4. Skip lakehouses that already exist
+3. Create each lakehouse and warehouse using the Fabric REST API
+4. Skip items that already exist
 
-To add more lakehouses, simply update the `lakehouses` list in `lakehouse_solution.yml`:
+To add more lakehouses or warehouses, simply update the lists in `lakehouse_solution.yml`:
 ```yaml
 lakehouses:
-  - gold
-  - silver
-  - bronze  # Add new lakehouses here
+  - bronze
+  - silver  # Add new lakehouses here
+warehouses:
+  - gold    # Add new warehouses here
 ```
 
 ## Per-environment parameters
