@@ -5,6 +5,13 @@
 
 solution_name: main
 
+# Fabric capacity assignment per environment
+# Get capacity ID from: Fabric Portal -> Admin Portal -> Capacity Settings
+capacity:
+  dev: "REPLACE_WITH_YOUR_CAPACITY_ID"
+  tst: "REPLACE_WITH_YOUR_CAPACITY_ID"
+  prd: "REPLACE_WITH_YOUR_CAPACITY_ID"
+
 workspaces:
   ingestion:
     dev: "00000000-0000-0000-0000-main-ingestion-dev"

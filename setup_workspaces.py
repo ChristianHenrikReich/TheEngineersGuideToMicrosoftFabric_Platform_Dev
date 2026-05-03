@@ -46,12 +46,13 @@ class FabricWorkspaceManager(FabricClient):
         
         return workspaces
 
-    def create_workspace(self, name: str, description: str = "") -> str:
+    def create_workspace(self, name: str, description: str = "", capacity_id: str | None = None) -> str:
         """Create a new workspace.
         
         Args:
             name: Workspace display name
             description: Optional workspace description
+            capacity_id: Optional Fabric capacity ID to assign workspace to
             
         Returns:
             Workspace ID
@@ -64,6 +65,9 @@ class FabricWorkspaceManager(FabricClient):
         }
         if description:
             payload["description"] = description
+        if capacity_id and capacity_id != "REPLACE_WITH_YOUR_CAPACITY_ID":
+            payload["capacityId"] = capacity_id
+            print(f"  → Assigning to capacity: {capacity_id}")
         
         print(f"  → Calling Fabric API to create workspace '{name}'...")
         
@@ -76,6 +80,8 @@ class FabricWorkspaceManager(FabricClient):
             print(f"   1. Service principal lacks 'Workspace creation' permission")
             print(f"   2. Tenant setting 'Service principals can use Fabric APIs' is disabled")
             print(f"   3. Service principal is not in an enabled security group")
+            if capacity_id:
+                print(f"   4. Invalid capacity ID or no permission on capacity")
             raise
         
         workspace_id = result.get("id")
@@ -86,12 +92,13 @@ class FabricWorkspaceManager(FabricClient):
         print(f"✓ Created workspace: {name} ({workspace_id})")
         return workspace_id
 
-    def get_or_create_workspace(self, name: str, description: str = "") -> str:
+    def get_or_create_workspace(self, name: str, description: str = "", capacity_id: str | None = None) -> str:
         """Get existing workspace ID or create new workspace.
         
         Args:
             name: Workspace display name
             description: Optional workspace description
+            capacity_id: Optional Fabric capacity ID to assign workspace to
             
         Returns:
             Workspace ID
@@ -103,18 +110,23 @@ class FabricWorkspaceManager(FabricClient):
             print(f"✓ Found existing workspace: {name} ({workspace_id})")
             return workspace_id
         
-        return self.create_workspace(name, description)
+        return self.create_workspace(name, description, capacity_id)
 
 
-def save_workspace_config(config: dict, solution_name: str, config_path: Path = WORKSPACES_CONFIG) -> None:
+def save_workspace_config(config: dict, solution_name: str, capacity_config: dict | None = None, config_path: Path = WORKSPACES_CONFIG) -> None:
     """Save workspace configuration to lakehouse_solution.yml.
     
-    Preserves non-environment properties like 'lakehouses' lists.
+    Preserves non-environment properties like 'lakehouses' lists and capacity settings.
     """
     full_config = {
         "solution_name": solution_name,
-        "workspaces": config
     }
+    
+    # Add capacity configuration if provided
+    if capacity_config:
+        full_config["capacity"] = capacity_config
+    
+    full_config["workspaces"] = config
     
     with config_path.open("w", encoding="utf-8") as fh:
         # Write header comment
@@ -141,11 +153,25 @@ def setup_workspaces(dry_run: bool = False) -> None:
     full_config = load_solution_config()
     solution_name = full_config.get("solution_name", "main")
     config = full_config.get("workspaces", {})
+    capacity_config = full_config.get("capacity", {})
     
     manager = FabricWorkspaceManager()
     
     print("Setting up Fabric workspaces...")
-    print(f"Configuration file: {WORKSPACES_CONFIG}\n")
+    print(f"Configuration file: {WORKSPACES_CONFIG}")
+    
+    # Show capacity configuration
+    if capacity_config:
+        print("\nCapacity configuration:")
+        for env, cap_id in capacity_config.items():
+            if cap_id != "REPLACE_WITH_YOUR_CAPACITY_ID":
+                print(f"  {env}: {cap_id}")
+            else:
+                print(f"  {env}: (not configured - will use trial/default)")
+    else:
+        print("\n⚠️  No capacity configuration found - workspaces will use trial/default capacity")
+    
+    print()
     
     # Fetch existing workspaces from Fabric API
     print("Fetching existing workspaces from Fabric...")
@@ -215,7 +241,11 @@ def setup_workspaces(dry_run: bool = False) -> None:
                 
                 if not dry_run:
                     description = f"{workspace_type.replace('_', ' ').title()} workspace for {environment.upper()} environment"
-                    workspace_id = manager.create_workspace(workspace_name, description)
+                    
+                    # Get capacity ID for this environment
+                    capacity_id = capacity_config.get(environment) if capacity_config else None
+                    
+                    workspace_id = manager.create_workspace(workspace_name, description, capacity_id)
                     
                     # Update configuration with the new ID
                     config[workspace_type][environment] = workspace_id
@@ -226,7 +256,7 @@ def setup_workspaces(dry_run: bool = False) -> None:
     
     # Save updated configuration
     if updated and not dry_run:
-        save_workspace_config(config, solution_name)
+        save_workspace_config(config, solution_name, capacity_config)
         print("\n✅ All workspaces configured successfully!")
     elif dry_run:
         print("\n✅ Dry run completed. Use without --dry-run to apply changes.")
