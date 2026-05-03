@@ -6,7 +6,7 @@
 solution_name: main
 
 alias:
-  default_capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
+  default_capacity: "eee3bfce-0dc0-440d-8dfd-cd8d88e28d6e"
 
 workspaces:
   ingestion:
