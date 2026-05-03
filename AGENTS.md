@@ -121,6 +121,50 @@ steps:
 
 **Rationale:** Workspace IDs are created by `setup_workspaces.py`, so they can't exist before it runs.
 
+### 6. Infrastructure Deployment Pattern
+
+**Rule:** Azure infrastructure is deployed BEFORE Fabric workspace setup using separate service principals.
+
+**Directory Structure:**
+```
+infrastructure/
+  main.bicep                    # Subscription-scoped main template
+  modules/
+    keyvault.bicep              # Key Vault module
+  parameters/
+    main.dev.bicepparam         # Environment-specific parameters
+    main.tst.bicepparam
+    main.prd.bicepparam
+```
+
+**Deployment Order:**
+1. **Infrastructure Stage** - Deploy Azure resources (Key Vault, etc.)
+2. **Setup Workspaces** - Create Fabric workspaces
+3. **Deploy Fabric Items** - Deploy notebooks, pipelines, lakehouses
+
+**Separate Service Principals:**
+
+Infrastructure deployment and Fabric deployment use **different** service principals due to RBAC separation:
+
+- **Infrastructure SP**: Contributor on Azure subscription
+  - Azure DevOps: `Azure-Service-Connection`
+  - GitHub Actions: Uses `AZURE_SUBSCRIPTION_ID` secret
+- **Fabric SP**: Contributor on Fabric capacity
+  - Azure DevOps: `fabric-deploy-sc`
+  - GitHub Actions: Same client ID, no subscription ID needed
+
+**Bicep Deployment:**
+```bash
+az deployment sub create \
+  --location norwayeast \
+  --template-file infrastructure/main.bicep \
+  --parameters infrastructure/parameters/main.{environment}.bicepparam
+```
+
+**Rationale:** Separation of concerns - Azure resource management permissions are different from Fabric workspace permissions. Infrastructure resources (like Key Vault) must exist before Fabric items can reference them.
+
+**Rationale:** Workspace IDs are created by `setup_workspaces.py`, so they can't exist before it runs.
+
 ## File Organization
 
 ### Directory Structure
@@ -133,6 +177,16 @@ steps:
 
 .github/workflows/      # GitHub Actions workflows
   deploy-fabric.yml
+
+infrastructure/         # Azure infrastructure (Bicep)
+  main.bicep
+  modules/
+    keyvault.bicep
+  parameters/
+    main.dev.bicepparam
+    main.tst.bicepparam
+    main.prd.bicepparam
+  README.md
 
 solution/               # Fabric items organized by workspace type
   ingestion/
@@ -162,17 +216,27 @@ All Python scripts should:
 
 **Both Azure DevOps and GitHub Actions must follow:**
 
-1. **Setup Stage/Job** - Always run first
+1. **Infrastructure Stage/Job** - Deploy Azure resources first
+   - Execute Bicep deployment to subscription
+   - Use `Azure-Service-Connection` (Azure DevOps) or `AZURE_SUBSCRIPTION_ID` secret (GitHub Actions)
+   - Support approval gates for tst/prd environments
+
+2. **Setup Stage/Job** - Create Fabric workspaces
+   - Depends on infrastructure deployment completing
    - Execute `setup_workspaces.py`
    - Commit `workspaces.yml` changes with `[skip ci]`
    - Use `persistCredentials: true` / `token: ${{ secrets.GITHUB_TOKEN }}`
 
-2. **Deploy Stage/Job** - Runs after setup
+3. **Deploy Stage/Job** - Runs after setup
    - Read workspace IDs from `workspaces.yml`
    - NO workspace ID variables required
    - Use approval gates for tst/prd environments
 
 ### Azure DevOps Specifics
+
+**Service Connections:**
+- `Azure-Service-Connection` - For infrastructure deployment (Contributor on subscription)
+- `fabric-deploy-sc` - For Fabric deployment (Contributor on Fabric capacity)
 
 **Variable Groups:** NOT required for workspace IDs (removed)
 
@@ -180,13 +244,12 @@ All Python scripts should:
 - `fabric-tst` - Test environment (requires approval)
 - `fabric-prd` - Production environment (requires approval)
 
-**Service Connection:** `fabric-deploy-sc` (Azure Resource Manager)
-
 ### GitHub Actions Specifics
 
 **Secrets Required:**
-- `AZURE_CLIENT_ID`
-- `AZURE_TENANT_ID`
+- `AZURE_CLIENT_ID` - Client ID for both infrastructure and Fabric deployment
+- `AZURE_TENANT_ID` - Tenant ID
+- `AZURE_SUBSCRIPTION_ID` - Subscription ID for infrastructure deployment
 
 **Environment Variables:** NOT required for workspace IDs (removed)
 
