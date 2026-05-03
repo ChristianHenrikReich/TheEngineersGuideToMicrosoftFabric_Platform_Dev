@@ -35,12 +35,13 @@ During CI/CD deployment, you specify both the workspace type and the environment
     parameter.yml
     bronze.Lakehouse/       # (created by setup_lakehouses.py)
     silver.Lakehouse/       # (created by setup_lakehouses.py)
-    gold.Warehouse/         # (created by setup_lakehouses.py)
+    gold.Warehouse/         # (created by setup_warehouses.py)
 AGENTS.md                   # Rules and architectural decisions for AI agents/developers
-workspaces.yml              # Workspace ID mapping (workspace_type -> environment -> id)
+lakehouse_solution.yml      # Solution config with workspace IDs
 fabric_client.py            # Shared Fabric REST API client
-setup_workspaces.py         # Create/update Fabric workspaces and workspaces.yml
-setup_lakehouses.py         # Create gold/silver lakehouse artifacts
+setup_workspaces.py         # Create/update Fabric workspaces and lakehouse_solution.yml
+setup_lakehouses.py         # Create lakehouse items
+setup_warehouses.py         # Create warehouse items
 deploy.py                   # Local + CI deployment entrypoint
 requirements-deploy.txt     # Python deps for deploy.py
 .azure_devops/
@@ -138,8 +139,10 @@ not in the repo. Pass `--no-unpublish-orphans` to skip that step.
 
 ## Setup lakehouses
 
-The `setup_lakehouses.py` script creates lakehouse and warehouse items directly in your Fabric 
-workspace using the Fabric REST API. Item names are defined in 
+## Lakehouse Setup
+
+The `setup_lakehouses.py` script creates lakehouse items in your Fabric 
+workspace using the Fabric REST API. Lakehouse names are defined in 
 `lakehouse_solution.yml` (data-driven configuration).
 
 Prerequisites:
@@ -151,24 +154,54 @@ az login
 
 Usage:
 ```bash
-# Create lakehouses and warehouses in the dev environment
+# Create lakehouses in the dev environment
 python setup_lakehouses.py --environment dev
 
-# Create lakehouses and warehouses in production
+# Create lakehouses in production
 python setup_lakehouses.py --environment prd
 ```
 
 This will:
-1. Read lakehouse and warehouse names from `lakehouse_solution.yml`
+1. Read lakehouse names from `lakehouse_solution.yml` (`lakehouses` list)
 2. Get the target workspace ID for the specified environment
-3. Create each lakehouse and warehouse using the Fabric REST API
-4. Skip items that already exist
+3. Create each lakehouse using the Fabric REST API
+4. Skip lakehouses that already exist
 
-To add more lakehouses or warehouses, simply update the lists in `lakehouse_solution.yml`:
+To add more lakehouses, simply update the `lakehouses` list in `lakehouse_solution.yml`:
 ```yaml
 lakehouses:
   - bronze
   - silver  # Add new lakehouses here
+```
+
+## Warehouse Setup
+
+The `setup_warehouses.py` script creates warehouse items in your Fabric 
+workspace using the Fabric REST API. Warehouse names are defined in 
+`lakehouse_solution.yml` (data-driven configuration).
+
+Prerequisites:
+```bash
+az login
+```
+
+Usage:
+```bash
+# Create warehouses in the dev environment
+python setup_warehouses.py --environment dev
+
+# Create warehouses in production
+python setup_warehouses.py --environment prd
+```
+
+This will:
+1. Read warehouse names from `lakehouse_solution.yml` (`warehouses` list)
+2. Get the target workspace ID for the specified environment
+3. Create each warehouse using the Fabric REST API
+4. Skip warehouses that already exist
+
+To add more warehouses, simply update the `warehouses` list in `lakehouse_solution.yml`:
+```yaml
 warehouses:
   - gold    # Add new warehouses here
 ```
@@ -290,7 +323,7 @@ Modify the parameter defaults in the YAML file to customize which workspaces and
 
 ## Notes
 
-- **Shared Fabric API Client**: Both `setup_workspaces.py` and `setup_lakehouses.py` 
+- **Shared Fabric API Client**: Both `setup_workspaces.py`, `setup_lakehouses.py`, and `setup_warehouses.py` 
   use the shared `fabric_client.py` module, which provides a `FabricClient` base class 
   with common authentication and REST API request methods. This eliminates code 
   duplication and ensures consistent API interaction patterns.

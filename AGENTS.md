@@ -144,7 +144,9 @@ infrastructure/
 **Deployment Order:**
 1. **Infrastructure Stage** - Deploy Azure resources (Key Vault, etc.)
 2. **Setup Workspaces** - Create Fabric workspaces
-3. **Deploy Fabric Items** - Deploy notebooks, pipelines, lakehouses
+3. **Setup Lakehouses** - Create lakehouse items
+4. **Setup Warehouses** - Create warehouse items
+5. **Deploy Fabric Items** - Deploy notebooks, pipelines, etc.
 
 **Separate Service Principals:**
 
@@ -200,6 +202,7 @@ solution/               # Fabric items organized by workspace type
 fabric_client.py        # Shared Fabric REST API client
 setup_workspaces.py     # Create/update workspaces
 setup_lakehouses.py     # Create lakehouse items
+setup_warehouses.py     # Create warehouse items
 deploy.py               # Deploy Fabric items
 lakehouse_solution.yml  # Solution config with workspace IDs
 requirements-deploy.txt # Python dependencies
@@ -225,9 +228,11 @@ All Python scripts should:
    - Use `Azure-Service-Connection` (Azure DevOps) or `AZURE_SUBSCRIPTION_ID` secret (GitHub Actions)
    - Support approval gates for tst/prd environments
 
-2. **Setup Stage/Job** - Create Fabric workspaces
+2. **Setup Stage/Job** - Create Fabric workspaces and items
    - Depends on infrastructure deployment completing
-   - Execute `setup_workspaces.py`
+   - Execute `setup_workspaces.py` to create workspaces
+   - Execute `setup_lakehouses.py` to create lakehouse items
+   - Execute `setup_warehouses.py` to create warehouse items
    - Commit `lakehouse_solution.yml` changes with `[skip ci]`
    - Use `persistCredentials: true` / `token: ${{ secrets.GITHUB_TOKEN }}`
 

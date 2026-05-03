@@ -85,6 +85,22 @@ jobs:
           echo "Running setup_workspaces.py to ensure all workspaces exist..."
           python setup_workspaces.py
       
+      - name: Setup lakehouses
+        run: |
+          echo "Creating lakehouses for all environments..."
+          for env in dev tst prd; do
+            echo "Setting up lakehouses for $env..."
+            python setup_lakehouses.py --environment $env || echo "Warning: lakehouse setup failed for $env (may not exist yet)"
+          done
+      
+      - name: Setup warehouses
+        run: |
+          echo "Creating warehouses for all environments..."
+          for env in dev tst prd; do
+            echo "Setting up warehouses for $env..."
+            python setup_warehouses.py --environment $env || echo "Warning: warehouse setup failed for $env (may not exist yet)"
+          done
+      
       - name: Commit lakehouse_solution.yml changes
         run: |
           git config user.name "GitHub Actions"
