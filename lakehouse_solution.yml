@@ -5,12 +5,21 @@
 
 solution_name: main
 
-# Fabric capacity assignment per environment
+# Fabric capacity assignment per workspace type and environment
 # Get capacity ID from: Fabric Portal -> Admin Portal -> Capacity Settings
 capacity:
-  dev: "REPLACE_WITH_YOUR_CAPACITY_ID"
-  tst: "REPLACE_WITH_YOUR_CAPACITY_ID"
-  prd: "REPLACE_WITH_YOUR_CAPACITY_ID"
+  ingestion:
+    dev: "REPLACE_WITH_YOUR_CAPACITY_ID"
+    tst: "REPLACE_WITH_YOUR_CAPACITY_ID"
+    prd: "REPLACE_WITH_YOUR_CAPACITY_ID"
+  lakehouse_processing:
+    dev: "REPLACE_WITH_YOUR_CAPACITY_ID"
+    tst: "REPLACE_WITH_YOUR_CAPACITY_ID"
+    prd: "REPLACE_WITH_YOUR_CAPACITY_ID"
+  lakehouse:
+    dev: "REPLACE_WITH_YOUR_CAPACITY_ID"
+    tst: "REPLACE_WITH_YOUR_CAPACITY_ID"
+    prd: "REPLACE_WITH_YOUR_CAPACITY_ID"
 
 workspaces:
   ingestion:

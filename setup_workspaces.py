@@ -122,7 +122,7 @@ def save_workspace_config(config: dict, solution_name: str, capacity_config: dic
         "solution_name": solution_name,
     }
     
-    # Add capacity configuration if provided
+    # Add capacity configuration if provided (per workspace type and environment)
     if capacity_config:
         full_config["capacity"] = capacity_config
     
@@ -163,11 +163,14 @@ def setup_workspaces(dry_run: bool = False) -> None:
     # Show capacity configuration
     if capacity_config:
         print("\nCapacity configuration:")
-        for env, cap_id in capacity_config.items():
-            if cap_id != "REPLACE_WITH_YOUR_CAPACITY_ID":
-                print(f"  {env}: {cap_id}")
-            else:
-                print(f"  {env}: (not configured - will use trial/default)")
+        for ws_type, envs in capacity_config.items():
+            if isinstance(envs, dict):
+                print(f"  {ws_type}:")
+                for env, cap_id in envs.items():
+                    if cap_id != "REPLACE_WITH_YOUR_CAPACITY_ID":
+                        print(f"    {env}: {cap_id}")
+                    else:
+                        print(f"    {env}: (not configured)")
     else:
         print("\n⚠️  No capacity configuration found - workspaces will use trial/default capacity")
     
@@ -242,8 +245,12 @@ def setup_workspaces(dry_run: bool = False) -> None:
                 if not dry_run:
                     description = f"{workspace_type.replace('_', ' ').title()} workspace for {environment.upper()} environment"
                     
-                    # Get capacity ID for this environment
-                    capacity_id = capacity_config.get(environment) if capacity_config else None
+                    # Get capacity ID for this workspace type and environment
+                    capacity_id = None
+                    if capacity_config and workspace_type in capacity_config:
+                        workspace_capacity = capacity_config[workspace_type]
+                        if isinstance(workspace_capacity, dict):
+                            capacity_id = workspace_capacity.get(environment)
                     
                     workspace_id = manager.create_workspace(workspace_name, description, capacity_id)
                     
