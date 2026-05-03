@@ -51,18 +51,21 @@ parameters:
         deploy: true
         requiresApproval: false
         dependsOn: []
+        infraDependsOn: []
       - name: tst
         displayName: TST
         deploy: true
         requiresApproval: true
         dependsOn:
           - deploy_dev
+        infraDependsOn: []  # Parallel infrastructure
       - name: prd
         displayName: PRD
         deploy: true
         requiresApproval: true
         dependsOn:
           - deploy_tst
+        infraDependsOn: []  # Parallel infrastructure
 
 variables:
   pythonVersion: "3.12"

@@ -15,8 +15,8 @@ stages:
     displayName: Deploy Infrastructure - ${{ parameters.environment.displayName }}
     condition: eq('${{ parameters.environment.deploy }}', 'True')
     dependsOn:
-      - ${{ each dep in parameters.environment.dependsOn }}:
-        - ${{ replace(dep, 'deploy_', 'deploy_infrastructure_') }}
+      - ${{ each dep in parameters.environment.infraDependsOn }}:
+        - ${{ dep }}
     jobs:
       # Regular job for environments without approval (e.g., dev)
       - ${{ if eq(parameters.environment.requiresApproval, false) }}:
