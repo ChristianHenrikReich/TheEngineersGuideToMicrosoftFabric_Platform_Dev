@@ -10,7 +10,7 @@ from azure.identity import AzureCliCredential
 import requests
 
 # Constants
-REPO_ROOT = Path(__file__).resolve().parent
+REPO_ROOT = Path(__file__).resolve().parent.parent
 SOLUTION_CONFIG = REPO_ROOT / "lakehouse_solution.yml"
 FABRIC_API_BASE = "https://api.fabric.microsoft.com/v1"
 

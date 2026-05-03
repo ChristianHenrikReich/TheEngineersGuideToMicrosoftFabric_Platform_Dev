@@ -2,8 +2,8 @@
 
 Local usage:
     az login
-    python deploy.py --workspace ingestion --environment dev
-    python deploy.py --workspace lakehouse --environment prod
+    python scripts/deploy.py --workspace ingestion --environment dev
+    python scripts/deploy.py --workspace lakehouse --environment prod
 
 CI usage: a service principal credential is passed in via env vars; see
 .github/workflows/deploy-fabric.yml and .azure_devops/azure-pipelines.yml.
@@ -24,7 +24,7 @@ from fabric_cicd import (
 
 from fabric_client import get_workspace_id
 
-REPO_ROOT = Path(__file__).resolve().parent
+REPO_ROOT = Path(__file__).resolve().parent.parent
 SOLUTION_ROOT = REPO_ROOT / "solution"
 
 # Valid workspace types

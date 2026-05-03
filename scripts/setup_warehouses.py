@@ -1,11 +1,11 @@
-"""Setup lakehouses in the lakehouse Fabric workspace.
+"""Setup warehouses in the lakehouse Fabric workspace.
 
-Lakehouse names are read from lakehouse_solution.yml under
-``workspaces.lakehouse.lakehouses``.
+Warehouse names are read from lakehouse_solution.yml under
+``workspaces.lakehouse.warehouses``.
 
 Local usage:
     az login
-    python setup_lakehouses.py --environment dev
+    python scripts/setup_warehouses.py --environment dev
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from fabric_client import setup_workspace_items
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Setup lakehouses in Fabric workspace using Fabric REST API."
+        description="Setup warehouses in Fabric workspace using Fabric REST API."
     )
     parser.add_argument(
         "--environment", "-e",
@@ -30,7 +30,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         setup_workspace_items(
-            item_type="lakehouses",
+            item_type="warehouses",
             workspace_type="lakehouse",
             environment=args.environment,
         )

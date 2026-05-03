@@ -45,7 +45,7 @@ stages:
               scriptLocation: inlineScript
               inlineScript: |
                 echo "Running setup_workspaces.py to ensure all workspaces exist..."
-                python setup_workspaces.py
+                python scripts/setup_workspaces.py
           
           - task: AzureCLI@2
             displayName: Setup lakehouses
@@ -57,7 +57,7 @@ stages:
                 echo "Creating lakehouses for all environments..."
                 for env in dev tst prd; do
                   echo "Setting up lakehouses for $env..."
-                  python setup_lakehouses.py --environment $env || echo "Warning: lakehouse setup failed for $env (may not exist yet)"
+                  python scripts/setup_lakehouses.py --environment $env || echo "Warning: lakehouse setup failed for $env (may not exist yet)"
                 done
           
           - task: AzureCLI@2
@@ -70,7 +70,7 @@ stages:
                 echo "Creating warehouses for all environments..."
                 for env in dev tst prd; do
                   echo "Setting up warehouses for $env..."
-                  python setup_warehouses.py --environment $env || echo "Warning: warehouse setup failed for $env (may not exist yet)"
+                  python scripts/setup_warehouses.py --environment $env || echo "Warning: warehouse setup failed for $env (may not exist yet)"
                 done
           
           - script: |

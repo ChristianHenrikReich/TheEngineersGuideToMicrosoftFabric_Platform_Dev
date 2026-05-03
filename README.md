@@ -38,12 +38,13 @@ During CI/CD deployment, you specify both the workspace type and the environment
     gold.Warehouse/         # (created by setup_warehouses.py)
 AGENTS.md                   # Rules and architectural decisions for AI agents/developers
 lakehouse_solution.yml      # Solution config with workspace IDs
-fabric_client.py            # Shared Fabric REST API client
-setup_workspaces.py         # Create/update Fabric workspaces and lakehouse_solution.yml
-setup_lakehouses.py         # Create lakehouse items
-setup_warehouses.py         # Create warehouse items
-deploy.py                   # Local + CI deployment entrypoint
-requirements-deploy.txt     # Python deps for deploy.py
+scripts/                    # All deployment / setup Python scripts
+  fabric_client.py          # Shared Fabric REST API client
+  setup_workspaces.py       # Create/update Fabric workspaces and lakehouse_solution.yml
+  setup_lakehouses.py       # Create lakehouse items
+  setup_warehouses.py       # Create warehouse items
+  deploy.py                 # Local + CI deployment entrypoint
+requirements-deploy.txt     # Python deps for the scripts
 .azure_devops/
   azure-pipelines.yml       # Azure DevOps pipeline
   templates/
@@ -97,10 +98,10 @@ az login
 pip install -r requirements-deploy.txt
 
 # Create workspaces if they don't exist and update lakehouse_solution.yml
-python setup_workspaces.py
+python scripts/setup_workspaces.py
 
 # Dry run to see what would be created without making changes
-python setup_workspaces.py --dry-run
+python scripts/setup_workspaces.py --dry-run
 ```
 
 This script:
@@ -154,15 +155,15 @@ az login
 pip install -r requirements-deploy.txt
 
 # Deploy ingestion workspace to dev
-python deploy.py --workspace ingestion --environment dev
+python scripts/deploy.py --workspace ingestion --environment dev
 
 # Deploy lakehouse workspace to production
-python deploy.py --workspace lakehouse --environment prd
+python scripts/deploy.py --workspace lakehouse --environment prd
 
 # Deploy all workspaces to test
-python deploy.py --workspace ingestion --environment tst
-python deploy.py --workspace lakehouse_processing --environment tst
-python deploy.py --workspace lakehouse --environment tst
+python scripts/deploy.py --workspace ingestion --environment tst
+python scripts/deploy.py --workspace lakehouse_processing --environment tst
+python scripts/deploy.py --workspace lakehouse --environment tst
 ```
 
 Workspace IDs are configured in `lakehouse_solution.yml`. Override them via environment 
@@ -190,10 +191,10 @@ az login
 Usage:
 ```bash
 # Create lakehouses in the dev environment
-python setup_lakehouses.py --environment dev
+python scripts/setup_lakehouses.py --environment dev
 
 # Create lakehouses in production
-python setup_lakehouses.py --environment prd
+python scripts/setup_lakehouses.py --environment prd
 ```
 
 This will:
@@ -223,10 +224,10 @@ az login
 Usage:
 ```bash
 # Create warehouses in the dev environment
-python setup_warehouses.py --environment dev
+python scripts/setup_warehouses.py --environment dev
 
 # Create warehouses in production
-python setup_warehouses.py --environment prd
+python scripts/setup_warehouses.py --environment prd
 ```
 
 This will:

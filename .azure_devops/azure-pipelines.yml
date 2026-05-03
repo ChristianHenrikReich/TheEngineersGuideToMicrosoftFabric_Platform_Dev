@@ -19,7 +19,7 @@ trigger:
     include:
       - solution/*
       - infrastructure/*
-      - deploy.py
+      - scripts/*
       - requirements-deploy.txt
       - .azure_devops/*
 

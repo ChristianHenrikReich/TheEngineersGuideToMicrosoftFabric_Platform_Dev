@@ -15,7 +15,7 @@ Examples: main-ingestion-dev, main-lakehouse-prd, main-lakehouse_processing-tst
 
 Local usage:
     az login
-    python setup_workspaces.py
+    python scripts/setup_workspaces.py
 
 This will:
 1. List all accessible Fabric workspaces

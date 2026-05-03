@@ -24,6 +24,6 @@ steps:
       scriptLocation: inlineScript
       inlineScript: |
         # Deploy - workspace IDs are read from lakehouse_solution.yml
-        python deploy.py \
+        python scripts/deploy.py \
           --workspace ${{ parameters.workspace }} \
           --environment ${{ parameters.environment }}

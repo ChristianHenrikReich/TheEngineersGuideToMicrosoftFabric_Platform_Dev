@@ -127,15 +127,15 @@ workspaces:
 variables:
   - group: fabric-workspace-env  # Contains WORKSPACE_ID
 steps:
-  - script: python deploy.py --workspace-id $(WORKSPACE_ID)
+  - script: python scripts/deploy.py --workspace-id $(WORKSPACE_ID)
 ```
 
 **Correct Pattern:**
 ```yaml
 # ✅ GOOD: Reads from lakehouse_solution.yml updated by setup stage
 steps:
-  - script: python setup_workspaces.py  # Updates lakehouse_solution.yml
-  - script: python deploy.py            # Reads from lakehouse_solution.yml
+  - script: python scripts/setup_workspaces.py  # Updates lakehouse_solution.yml
+  - script: python scripts/deploy.py            # Reads from lakehouse_solution.yml
 ```
 
 **Rationale:** Workspace IDs are created by `setup_workspaces.py`, so they can't exist before it runs.
@@ -214,11 +214,12 @@ solution/               # Fabric items organized by workspace type
   lakehouse_processing/
   lakehouse/
 
-fabric_client.py        # Shared Fabric REST API client
-setup_workspaces.py     # Create/update workspaces
-setup_lakehouses.py     # Create lakehouse items
-setup_warehouses.py     # Create warehouse items
-deploy.py               # Deploy Fabric items
+scripts/                # All deployment / setup Python scripts
+  fabric_client.py      # Shared Fabric REST API client
+  setup_workspaces.py   # Create/update workspaces
+  setup_lakehouses.py   # Create lakehouse items
+  setup_warehouses.py   # Create warehouse items
+  deploy.py             # Deploy Fabric items
 lakehouse_solution.yml  # Solution config with workspace IDs
 requirements-deploy.txt # Python dependencies
 ```
@@ -460,9 +461,9 @@ Every script needs:
 get_errors()  # If using AI agent tools
 
 # Or manually:
-python -m py_compile setup_workspaces.py
-python -m py_compile setup_lakehouses.py
-python -m py_compile deploy.py
+python -m py_compile scripts/setup_workspaces.py
+python -m py_compile scripts/setup_lakehouses.py
+python -m py_compile scripts/deploy.py
 ```
 
 ## Common Mistakes to Avoid
