@@ -1,7 +1,13 @@
 """Setup Fabric workspaces and update workspaces.yml with their IDs.
 
-This script ensures all required Fabric workspaces exist and updates the
-workspaces.yml configuration file with their actual workspace IDs.
+This script ensures all Fabric workspaces match the configuration defined in
+lakehouse_solution.yml, treating the YAML file as the source of truth.
+
+For each workspace defined in the configuration:
+- Creates the workspace if it doesn't exist
+- Updates capacity assignment if different from config
+- Ensures administrators have access
+- Updates lakehouse_solution.yml with actual workspace IDs
 
 Workspace naming convention: {solution_name}-{workspace_type}-{environment}
 Solution name: main
@@ -13,8 +19,9 @@ Local usage:
 
 This will:
 1. List all accessible Fabric workspaces
-2. Create missing workspaces based on workspaces.yml structure
-3. Update workspaces.yml with actual workspace IDs
+2. Create missing workspaces based on lakehouse_solution.yml
+3. Update existing workspaces to match configuration (capacity, administrators)
+4. Update lakehouse_solution.yml with actual workspace IDs
 """
 
 from __future__ import annotations
@@ -76,6 +83,25 @@ class FabricWorkspaceManager(FabricClient):
         except requests.exceptions.HTTPError as e:
             print(f"\n❌ FAILED to create workspace '{name}'")
             print(f"   HTTP Error: {e}")
+            
+            # Check for specific error code in response
+            if e.response is not None and e.response.status_code == 409:
+                try:
+                    error_data = e.response.json()
+                    if error_data.get("errorCode") == "WorkspaceNameAlreadyExists":
+                        print(f"\n   ⚠️  WORKSPACE NAME ALREADY EXISTS")
+                        print(f"   The workspace '{name}' exists in the tenant but you can't see it.")
+                        print(f"   This usually means:")
+                        print(f"   1. Workspace exists from a previous creation")
+                        print(f"   2. Service principal lacks Viewer/Member access to the existing workspace")
+                        print(f"\n   Solutions:")
+                        print(f"   → Grant service principal 'Viewer' or 'Member' role on the existing workspace")
+                        print(f"   → Or delete the existing workspace and run this script again")
+                        print(f"   → Or rename the workspace in Fabric portal and run this script again")
+                        raise SystemExit(1)
+                except (ValueError, AttributeError):
+                    pass
+            
             print(f"   This usually means:")
             print(f"   1. Service principal lacks 'Workspace creation' permission")
             print(f"   2. Tenant setting 'Service principals can use Fabric APIs' is disabled")
@@ -92,13 +118,88 @@ class FabricWorkspaceManager(FabricClient):
         print(f"✓ Created workspace: {name} ({workspace_id})")
         return workspace_id
 
-    def get_or_create_workspace(self, name: str, description: str = "", capacity_id: str | None = None) -> str:
-        """Get existing workspace ID or create new workspace.
+    def get_workspace_details(self, workspace_id: str) -> dict:
+        """Get workspace details including current capacity.
+        
+        Args:
+            workspace_id: Workspace ID
+            
+        Returns:
+            Workspace details dict with capacityId
+        """
+        # Use admin API because regular API doesn't return capacityId
+        return self._api_request("GET", f"/admin/workspaces/{workspace_id}")
+
+    def update_workspace_capacity(self, workspace_id: str, capacity_id: str) -> None:
+        """Update workspace capacity assignment.
+        
+        Args:
+            workspace_id: Workspace ID
+            capacity_id: Target capacity ID
+            
+        Raises:
+            requests.HTTPError: If API call fails
+        """
+        payload = {"capacityId": capacity_id}
+        
+        try:
+            # Use assignToCapacity endpoint (returns 202 Accepted)
+            self._api_request(
+                "POST",
+                f"/workspaces/{workspace_id}/assignToCapacity",
+                json_data=payload
+            )
+            print(f"  ✓ Updated capacity to {capacity_id}")
+        except requests.exceptions.HTTPError as e:
+            print(f"  ⚠️  Failed to update capacity: {e}")
+            if e.response is not None:
+                print(f"     Status: {e.response.status_code}")
+                print(f"     Response: {e.response.text}")
+            # Don't fail the whole process for capacity update failures
+
+    def add_workspace_user(self, workspace_id: str, identifier: str, role: str = "Admin", principal_type: str = "Group") -> None:
+        """Add a user or group to a workspace using role assignments.
+        
+        Args:
+            workspace_id: Workspace ID
+            identifier: User email (UPN), group Object ID, or app client ID
+            role: Workspace role (Admin, Member, Contributor, Viewer)
+            principal_type: Type of principal (User, Group, ServicePrincipal)
+            
+        Raises:
+            requests.HTTPError: If API call fails
+        """
+        payload = {
+            "principal": {
+                "id": identifier,
+                "type": principal_type
+            },
+            "role": role
+        }
+        
+        try:
+            self._api_request(
+                "POST",
+                f"/workspaces/{workspace_id}/roleAssignments",
+                json_data=payload
+            )
+            print(f"  ✓ Added {principal_type.lower()} '{identifier}' as {role}")
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 409:
+                # User/group already has access
+                print(f"  ℹ️  {principal_type} '{identifier}' already has access")
+            else:
+                print(f"  ⚠️  Failed to add {principal_type.lower()} '{identifier}': {e}")
+                # Don't fail the whole process for admin assignment failures
+
+    def get_or_create_workspace(self, name: str, description: str = "", capacity_id: str | None = None, administrators: list[str] | None = None) -> str:
+        """Get existing workspace or create new workspace, updating to match config.
         
         Args:
             name: Workspace display name
             description: Optional workspace description
             capacity_id: Optional Fabric capacity ID to assign workspace to
+            administrators: Optional list of admin users/groups to add
             
         Returns:
             Workspace ID
@@ -108,9 +209,44 @@ class FabricWorkspaceManager(FabricClient):
         if name in workspaces:
             workspace_id = workspaces[name]
             print(f"✓ Found existing workspace: {name} ({workspace_id})")
+            
+            # Update workspace to match configuration (source of truth)
+            print(f"  → Checking workspace configuration...")
+            
+            # Check and update capacity if specified and different
+            if capacity_id and capacity_id != "REPLACE_WITH_YOUR_CAPACITY_ID":
+                try:
+                    details = self.get_workspace_details(workspace_id)
+                    current_capacity = details.get("capacityId")
+                    
+                    if current_capacity != capacity_id:
+                        print(f"  → Capacity mismatch: {current_capacity} → {capacity_id}")
+                        self.update_workspace_capacity(workspace_id, capacity_id)
+                    else:
+                        print(f"  ✓ Capacity already correct: {capacity_id}")
+                except Exception as e:
+                    print(f"  ⚠️  Could not verify/update capacity: {e}")
+            
+            # Ensure administrators have access
+            if administrators:
+                print(f"  → Ensuring administrators have access...")
+                for admin in administrators:
+                    principal_type = "User" if "@" in admin else "Group"
+                    self.add_workspace_user(workspace_id, admin, role="Admin", principal_type=principal_type)
+            
             return workspace_id
         
-        return self.create_workspace(name, description, capacity_id)
+        # Create new workspace
+        workspace_id = self.create_workspace(name, description, capacity_id)
+        
+        # Add administrators to newly created workspace
+        if administrators:
+            print(f"  → Adding administrators...")
+            for admin in administrators:
+                principal_type = "User" if "@" in admin else "Group"
+                self.add_workspace_user(workspace_id, admin, role="Admin", principal_type=principal_type)
+        
+        return workspace_id
 
 
 def save_workspace_config(config: dict, solution_name: str, config_path: Path = WORKSPACES_CONFIG) -> None:
@@ -198,48 +334,48 @@ def setup_workspaces(dry_run: bool = False) -> None:
             # Generate workspace name following convention
             workspace_name = f"{solution_name}-{workspace_type}-{environment}"
             
-            # Get current values from config
+            # Get desired configuration (source of truth)
             current_id = env_config.get('id', '')
             capacity_id = env_config.get('capacity')
-            
-            # Check if workspace exists in Fabric
-            workspace_exists_in_fabric = workspace_name in existing_workspaces
+            administrators = env_config.get('administrators', [])
             
             print(f"\n{workspace_name}:")
             print(f"  Config ID: {current_id}")
             if capacity_id and capacity_id != "REPLACE_WITH_YOUR_CAPACITY_ID":
                 print(f"  Capacity: {capacity_id}")
+            if administrators:
+                print(f"  Administrators: {', '.join(administrators)}")
             
-            if workspace_exists_in_fabric:
-                # Workspace exists in Fabric - verify/update ID
-                actual_id = existing_workspaces[workspace_name]
-                print(f"  Fabric ID: {actual_id}")
+            if not dry_run:
+                # Get or create workspace and update to match configuration
+                description = f"{workspace_type.replace('_', ' ').title()} workspace for {environment.upper()} environment"
                 
-                if current_id != actual_id:
-                    print(f"  ⚠️  ID mismatch detected!")
-                    if not dry_run:
-                        config[workspace_type][environment]['id'] = actual_id
-                        updated = True
-                        print(f"  ✓ Updated config with actual ID")
-                    else:
-                        print(f"  [DRY RUN] Would update config with actual ID")
-                else:
-                    print(f"  ✓ ID matches - no update needed")
-            else:
-                # Workspace doesn't exist in Fabric - create it
-                print(f"  Fabric ID: (not found)")
+                workspace_id = manager.get_or_create_workspace(
+                    workspace_name, 
+                    description, 
+                    capacity_id,
+                    administrators=administrators
+                )
                 
-                if not dry_run:
-                    description = f"{workspace_type.replace('_', ' ').title()} workspace for {environment.upper()} environment"
-                    
-                    workspace_id = manager.create_workspace(workspace_name, description, capacity_id)
-                    
-                    # Update configuration with the new ID (keep capacity as-is)
+                # Update config if ID changed
+                if current_id != workspace_id:
                     config[workspace_type][environment]['id'] = workspace_id
                     updated = True
-                    print(f"  ✓ Created and updated config")
+            else:
+                # Dry run - show what would happen
+                if workspace_name in existing_workspaces:
+                    actual_id = existing_workspaces[workspace_name]
+                    print(f"  [DRY RUN] Would verify/update existing workspace: {actual_id}")
+                    if capacity_id and capacity_id != "REPLACE_WITH_YOUR_CAPACITY_ID":
+                        print(f"  [DRY RUN] Would ensure capacity is: {capacity_id}")
+                    if administrators:
+                        print(f"  [DRY RUN] Would ensure administrators: {', '.join(administrators)}")
                 else:
                     print(f"  [DRY RUN] Would create workspace: {workspace_name}")
+                    if capacity_id and capacity_id != "REPLACE_WITH_YOUR_CAPACITY_ID":
+                        print(f"  [DRY RUN] Would assign capacity: {capacity_id}")
+                    if administrators:
+                        print(f"  [DRY RUN] Would add administrators: {', '.join(administrators)}")
     
     # Save updated configuration
     if updated and not dry_run:

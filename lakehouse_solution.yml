@@ -7,40 +7,59 @@ solution_name: main
 
 alias:
   default_capacity: "eee3bfce-0dc0-440d-8dfd-cd8d88e28d6e"
+  default_admin_group: "a9d50da5-198f-4197-aed3-44d76b0c3973"
 
 workspaces:
   ingestion:
     dev:
-      id: "00000000-0000-0000-0000-main-ingestion-dev"
+      id: "34e46294-b9c8-41f2-9680-d7de44f14365"
       capacity: default_capacity
+      administrators:
+        - default_admin_group
     tst:
-      id: "00000000-0000-0000-0000-main-ingestion-tst"
+      id: "38d8baf3-521d-4fb2-a174-ed3af71c41f3"
       capacity: default_capacity
+      administrators:
+        - default_admin_group
     prd:
-      id: "00000000-0000-0000-0000-main-ingestion-prd"
+      id: "0a2cc551-fd48-4a84-a909-dbff19a26d45"
       capacity: default_capacity
+      administrators:
+        - default_admin_group
 
   lakehouse_processing:
     dev:
-      id: "00000000-0000-0000-0000-main-processing-dev"
+      id: "ddd929b5-0545-47fd-a2b3-79b80cfa6505"
       capacity: default_capacity
+      administrators:
+        - default_admin_group
     tst:
-      id: "00000000-0000-0000-0000-main-processing-tst"
+      id: "da8dfb9b-9533-4114-8071-af3af89b98c5"
       capacity: default_capacity
+      administrators:
+        - default_admin_group 
     prd:
-      id: "00000000-0000-0000-0000-main-processing-prd"
+      id: "43dafa2b-16d0-4dab-a08c-00730ddf2c3b"
       capacity: default_capacity
+      administrators:
+        - default_admin_group
 
   lakehouse:
     dev:
-      id: "00000000-0000-0000-0000-main-lakehouse-dev"
+      id: "6f3b1862-dfe6-4e0b-a984-ec0fc0996f81"
       capacity: default_capacity
+      administrators:
+        - default_admin_group
     tst:
-      id: "00000000-0000-0000-0000-main-lakehouse-tst"
+      id: "4845d12d-d14b-4019-afea-c251528091f4"
       capacity: default_capacity
+      administrators:
+        - default_admin_group
     prd:
-      id: "00000000-0000-0000-0000-main-lakehouse-prd"
+      id: "736ae880-f026-41a9-a4fc-51c860481cb9"
       capacity: default_capacity
+      administrators:
+        - default_admin_group
     # Lakehouse items to create in this workspace
     lakehouses:
       - bronze
