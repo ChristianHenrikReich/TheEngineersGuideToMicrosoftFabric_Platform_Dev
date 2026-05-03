@@ -5,39 +5,42 @@
 
 solution_name: main
 
+alias:
+  dev_capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
+
 workspaces:
   ingestion:
     dev:
       id: "00000000-0000-0000-0000-main-ingestion-dev"
-      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
+      capacity: dev_capacity
     tst:
       id: "00000000-0000-0000-0000-main-ingestion-tst"
-      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
+      capacity: dev_capacity
     prd:
       id: "00000000-0000-0000-0000-main-ingestion-prd"
-      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
+      capacity: dev_capacity
 
   lakehouse_processing:
     dev:
       id: "00000000-0000-0000-0000-main-processing-dev"
-      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
+      capacity: dev_capacity
     tst:
       id: "00000000-0000-0000-0000-main-processing-tst"
-      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
+      capacity: dev_capacity
     prd:
       id: "00000000-0000-0000-0000-main-processing-prd"
-      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
+      capacity: dev_capacity
 
   lakehouse:
     dev:
       id: "00000000-0000-0000-0000-main-lakehouse-dev"
-      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
+      capacity: dev_capacity
     tst:
       id: "00000000-0000-0000-0000-main-lakehouse-tst"
-      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
+      capacity: dev_capacity
     prd:
       id: "00000000-0000-0000-0000-main-lakehouse-prd"
-      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
+      capacity: dev_capacity
     # Lakehouse items to create in this workspace
     lakehouses:
       - bronze

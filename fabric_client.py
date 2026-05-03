@@ -47,16 +47,63 @@ class FabricClient:
         return {}
 
 
-def load_workspace_config(config_path: Path = WORKSPACES_CONFIG) -> dict:
-    """Load workspace configuration from lakehouse_solution.yml.
+def _resolve_aliases(data: dict | list | str, aliases: dict) -> dict | list | str:
+    """Recursively resolve alias references in configuration data.
     
-    Returns the 'workspaces' section of the config.
+    Args:
+        data: Configuration data (dict, list, or string)
+        aliases: Alias mappings from the 'alias' section
+        
+    Returns:
+        Configuration with all alias references replaced by actual values
+    """
+    if isinstance(data, dict):
+        return {key: _resolve_aliases(value, aliases) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [_resolve_aliases(item, aliases) for item in data]
+    elif isinstance(data, str):
+        # Replace alias reference with actual value if it matches
+        return aliases.get(data, data)
+    else:
+        return data
+
+
+def _preprocess_config(config_path: Path = WORKSPACES_CONFIG) -> dict:
+    """Load and preprocess configuration with alias resolution.
+    
+    Loads lakehouse_solution.yml and resolves any alias references.
+    
+    Returns:
+        Preprocessed configuration with aliases resolved
     """
     if not config_path.is_file():
-        raise SystemExit(f"Workspace config not found: {config_path}")
+        raise SystemExit(f"Configuration not found: {config_path}")
 
     with config_path.open("r", encoding="utf-8") as fh:
         data = yaml.safe_load(fh) or {}
+    
+    # Extract aliases if present
+    aliases = data.get("alias", {})
+    
+    # Resolve aliases in the entire config (excluding the alias section itself)
+    if aliases:
+        resolved_data = {}
+        for key, value in data.items():
+            if key != "alias":
+                resolved_data[key] = _resolve_aliases(value, aliases)
+            else:
+                resolved_data[key] = value  # Keep alias section as-is
+        return resolved_data
+    
+    return data
+
+
+def load_workspace_config(config_path: Path = WORKSPACES_CONFIG) -> dict:
+    """Load workspace configuration from lakehouse_solution.yml.
+    
+    Resolves aliases and returns the 'workspaces' section of the config.
+    """
+    data = _preprocess_config(config_path)
 
     if "workspaces" not in data:
         raise SystemExit(f"'workspaces' section not found in {config_path}")
@@ -67,12 +114,6 @@ def load_workspace_config(config_path: Path = WORKSPACES_CONFIG) -> dict:
 def load_solution_config(config_path: Path = WORKSPACES_CONFIG) -> dict:
     """Load full lakehouse solution configuration.
     
-    Returns the complete config including solution_name and workspaces.
+    Resolves aliases and returns the complete config including solution_name and workspaces.
     """
-    if not config_path.is_file():
-        raise SystemExit(f"Solution config not found: {config_path}")
-
-    with config_path.open("r", encoding="utf-8") as fh:
-        data = yaml.safe_load(fh) or {}
-
-    return data
+    return _preprocess_config(config_path)
