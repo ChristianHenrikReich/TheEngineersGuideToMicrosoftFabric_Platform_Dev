@@ -288,7 +288,7 @@ Pipeline: `.azure_devops/azure-pipelines.yml`.
    - Commit message includes `[skip ci]` to prevent triggering another pipeline run
    
 3. **Deploy to Environments** - Deploys Fabric items to selected environments (dev/tst/prd)
-   - Uses service connection `fabric-deploy-sc`
+   - Uses service connection `spn-main-fabric-deploy`
    - Runs sequentially: dev → tst → prd
    - TST and PRD stages require approval via Azure DevOps environments
 
@@ -312,7 +312,7 @@ Modify the parameter defaults in the YAML file to customize which workspaces and
 2. Create a service principal for **Fabric deployment** with Contributor access to your Fabric capacity.
 3. Create service connections in Azure DevOps:
    - `Azure-Service-Connection` - For infrastructure deployment (linked to infrastructure SP)
-   - `fabric-deploy-sc` - For Fabric deployment (linked to Fabric SP)
+   - `spn-main-fabric-deploy` - For Fabric deployment (linked to Fabric SP)
 4. Create environments `fabric-tst` and `fabric-prd` with approval checks.
 
 **Note:** 

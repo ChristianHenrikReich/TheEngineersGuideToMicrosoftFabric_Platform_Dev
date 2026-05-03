@@ -156,7 +156,7 @@ Infrastructure deployment and Fabric deployment use **different** service princi
   - Azure DevOps: `Azure-Service-Connection`
   - GitHub Actions: Uses `AZURE_SUBSCRIPTION_ID` secret
 - **Fabric SP**: Contributor on Fabric capacity
-  - Azure DevOps: `fabric-deploy-sc`
+  - Azure DevOps: `spn-main-fabric-deploy`
   - GitHub Actions: Same client ID, no subscription ID needed
 
 **Bicep Deployment:**
@@ -245,7 +245,7 @@ All Python scripts should:
 
 **Service Connections:**
 - `Azure-Service-Connection` - For infrastructure deployment (Contributor on subscription)
-- `fabric-deploy-sc` - For Fabric deployment (Contributor on Fabric capacity)
+- `spn-main-fabric-deploy` - For Fabric deployment (Contributor on Fabric capacity)
 
 **Variable Groups:** NOT required for workspace IDs (removed)
 
