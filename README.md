@@ -28,6 +28,7 @@ solution/
     parameter.yml
     gold.Lakehouse/         # (created by setup_lakehouses.py)
     silver.Lakehouse/       # (created by setup_lakehouses.py)
+AGENTS.md                   # Rules and architectural decisions for AI agents/developers
 workspaces.yml              # Workspace ID mapping (workspace_type -> environment -> id)
 fabric_client.py            # Shared Fabric REST API client
 setup_workspaces.py         # Create/update Fabric workspaces and workspaces.yml
