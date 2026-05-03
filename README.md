@@ -17,8 +17,15 @@ During CI/CD deployment, you specify both the workspace type and the environment
 
 ## Repository layout
 
-\`\`\`
-solution/
+\`\`\`infrastructure/
+  main.bicep                # Main infrastructure template (subscription-scoped)
+  modules/
+    keyvault.bicep          # Key Vault module
+  parameters/
+    main.dev.bicepparam     # DEV parameters
+    main.tst.bicepparam     # TST parameters
+    main.prd.bicepparam     # PRD parameters
+  README.md                 # Infrastructure documentationsolution/
   ingestion/                # Ingestion workspace artifacts
     parameter.yml           # Ingestion-specific parameters
     ingest_from_customers_databases/
@@ -46,6 +53,37 @@ requirements-deploy.txt     # Python deps for deploy.py
 Each workspace type folder contains all artifacts for that logical workspace.
 Environment naming (dev/tst/prd) happens during deployment via the 
 `--environment` flag.
+
+## Azure Infrastructure
+
+Azure resources (Key Vault, etc.) are deployed using Bicep templates in the `infrastructure/` directory.
+
+### Deploy Infrastructure Locally
+
+```bash
+az login
+
+# Deploy to development
+az deployment sub create \
+  --location norwayeast \
+  --template-file infrastructure/main.bicep \
+  --parameters infrastructure/parameters/main.dev.bicepparam
+
+# Deploy to production
+az deployment sub create \
+  --location norwayeast \
+  --template-file infrastructure/main.bicep \
+  --parameters infrastructure/parameters/main.prd.bicepparam
+```
+
+### Resources Deployed
+
+- **Resource Group**: `rg-lakehouse-{environment}`
+- **Key Vault**: `kv-lakehouse-{environment}` - Stores connection strings, secrets, and keys for Fabric workspaces
+
+See [infrastructure/README.md](infrastructure/README.md) for detailed documentation.
+
+**Note:** Infrastructure deployment uses a **separate service principal** from Fabric deployment due to different RBAC requirements (Azure resource management vs. Fabric workspace access).
 
 ## Setup Fabric Workspaces
 
@@ -154,13 +192,18 @@ Workflow: `.github/workflows/deploy-fabric.yml`.
 
 **Workflow jobs:**
 
-1. **setup_workspaces** - Runs `setup_workspaces.py` to ensure all Fabric workspaces exist
+1. **deploy_infrastructure** - Deploys Azure infrastructure (Key Vault, etc.) using Bicep templates
+   - Runs for the target environment (dev on push, or selected environment on manual trigger)
+   - Requires `AZURE_SUBSCRIPTION_ID` secret
+
+2. **setup_workspaces** - Runs `setup_workspaces.py` to ensure all Fabric workspaces exist
+   - Depends on `deploy_infrastructure` completing successfully
    - If `workspaces.yml` is updated with new workspace IDs, changes are committed back to the repository
    - Commit message includes `[skip ci]` to prevent triggering another workflow run
 
-2. **setup** - Creates deployment matrix based on trigger type
+3. **setup** - Creates deployment matrix based on trigger type
 
-3. **deploy** - Deploys Fabric items to selected environments
+4. **deploy** - Deploys Fabric items to selected environments
 
 **Automatic deployment on push to main:**
 - Runs setup_workspaces job first
@@ -178,15 +221,20 @@ Workflow: `.github/workflows/deploy-fabric.yml`.
 
 **One-time setup:**
 
-1. Create a service principal and grant it Contributor access to your Fabric capacity.
-2. Add **federated credentials** on the SP for this repo (subject
+1. Create a service principal for **infrastructure deployment** with Contributor access to your Azure subscription.
+2. Create a service principal for **Fabric deployment** with Contributor access to your Fabric capacity.
+3. Configure **federated credentials** on both SPs for this repo (subject
    `repo:<owner>/<repo>:environment:fabric-dev`, etc.).
-3. Repo secrets: `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`.
-4. GitHub Environments: `fabric-dev`, `fabric-tst`, `fabric-prd` with required reviewers 
+4. Repo secrets:
+   - `AZURE_CLIENT_ID` - Client ID of the Fabric deployment SP
+   - `AZURE_TENANT_ID` - Tenant ID
+   - `AZURE_SUBSCRIPTION_ID` - Subscription ID for infrastructure deployment
+5. GitHub Environments: `fabric-dev`, `fabric-tst`, `fabric-prd` with required reviewers 
    on tst and prd.
 
-**Note:** Workspace IDs are read from `workspaces.yml`, which is automatically updated by the 
-`setup_workspaces` job. No environment variables needed for workspace configuration.
+**Note:** 
+- Infrastructure deployment and Fabric deployment use the **same** service principal (client ID) but the infrastructure job requires `AZURE_SUBSCRIPTION_ID` for Bicep deployments.
+- Workspace IDs are read from `workspaces.yml`, which is automatically updated by the `setup_workspaces` job.
 
 ## CI: Azure DevOps
 
@@ -194,11 +242,18 @@ Pipeline: `.azure_devops/azure-pipelines.yml`.
 
 **Pipeline stages:**
 
-1. **Setup Workspaces** - Runs `setup_workspaces.py` to ensure all Fabric workspaces exist
+1. **Deploy Infrastructure** - Deploys Azure infrastructure (Key Vault, etc.) using Bicep templates
+   - Runs per environment (dev/tst/prd)
+   - Uses service connection `Azure-Service-Connection`
+   - TST and PRD deployments require approval via Azure DevOps environments
+
+2. **Setup Workspaces** - Runs `setup_workspaces.py` to ensure all Fabric workspaces exist
+   - Depends on all infrastructure deployments completing successfully
    - If `workspaces.yml` is updated with new workspace IDs, changes are committed back to the repository
    - Commit message includes `[skip ci]` to prevent triggering another pipeline run
    
-2. **Deploy to Environments** - Deploys Fabric items to selected environments (dev/tst/prd)
+3. **Deploy to Environments** - Deploys Fabric items to selected environments (dev/tst/prd)
+   - Uses service connection `fabric-deploy-sc`
    - Runs sequentially: dev → tst → prd
    - TST and PRD stages require approval via Azure DevOps environments
 
@@ -218,12 +273,18 @@ Modify the parameter defaults in the YAML file to customize which workspaces and
 
 **One-time setup:**
 
-1. Create a service principal with Contributor access to your Fabric capacity.
-2. Create service connection `fabric-deploy-sc` (Azure Resource Manager) in Azure DevOps linked to that SP.
-3. Create environments `fabric-tst` and `fabric-prd` with approval checks.
+1. Create a service principal for **infrastructure deployment** with Contributor access to your Azure subscription.
+2. Create a service principal for **Fabric deployment** with Contributor access to your Fabric capacity.
+3. Create service connections in Azure DevOps:
+   - `Azure-Service-Connection` - For infrastructure deployment (linked to infrastructure SP)
+   - `fabric-deploy-sc` - For Fabric deployment (linked to Fabric SP)
+4. Create environments `fabric-tst` and `fabric-prd` with approval checks.
 
-**Note:** Workspace IDs are read from `workspaces.yml`, which is automatically updated by the 
-`setup_workspaces` stage. No variable groups needed for workspace configuration.
+**Note:** 
+- Two separate service principals are used due to different RBAC requirements:
+  - **Infrastructure SP**: Contributor on Azure subscription (for resource deployment)
+  - **Fabric SP**: Contributor on Fabric capacity (for workspace/item deployment)
+- Workspace IDs are read from `workspaces.yml`, which is automatically updated by the `setup_workspaces` stage.
 
 ## Notes
 
