@@ -51,14 +51,14 @@ stages:
               git config user.name "Azure DevOps Pipeline"
               git config user.email "pipeline@azuredevops.com"
               
-              # Check if workspaces.yml has changes
-              if git diff --quiet workspaces.yml; then
-                echo "No changes to workspaces.yml"
+              # Check if lakehouse_solution.yml has changes
+              if git diff --quiet lakehouse_solution.yml; then
+                echo "No changes to lakehouse_solution.yml"
               else
-                echo "workspaces.yml was updated with workspace IDs"
-                git add workspaces.yml
-                git commit -m "chore: update workspaces.yml with Fabric workspace IDs [skip ci]"
+                echo "lakehouse_solution.yml was updated with workspace IDs"
+                git add lakehouse_solution.yml
+                git commit -m "chore: update lakehouse_solution.yml with Fabric workspace IDs [skip ci]"
                 git push origin HEAD:$(Build.SourceBranch)
                 echo "Changes committed and pushed"
               fi
-            displayName: Commit workspaces.yml changes
+            displayName: Commit lakehouse_solution.yml changes

@@ -88,13 +88,13 @@ See [infrastructure/README.md](infrastructure/README.md) for detailed documentat
 ## Setup Fabric Workspaces
 
 Before deploying, ensure all required Fabric workspaces exist and are configured 
-in `workspaces.yml`. The `setup_workspaces.py` script automates this:
+in `lakehouse_solution.yml`. The `setup_workspaces.py` script automates this:
 
 ```bash
 az login
 pip install -r requirements-deploy.txt
 
-# Create workspaces if they don't exist and update workspaces.yml
+# Create workspaces if they don't exist and update lakehouse_solution.yml
 python setup_workspaces.py
 
 # Dry run to see what would be created without making changes
@@ -104,7 +104,7 @@ python setup_workspaces.py --dry-run
 This script:
 1. Lists all accessible Fabric workspaces via REST API
 2. Creates missing workspaces (named `main-{workspace_type}-{environment}`)
-3. Updates `workspaces.yml` with actual workspace IDs
+3. Updates `lakehouse_solution.yml` with actual workspace IDs
 
 **Note:** Uses the shared `fabric_client.py` module for Fabric REST API operations.
 
@@ -128,7 +128,7 @@ python deploy.py --workspace lakehouse_processing --environment tst
 python deploy.py --workspace lakehouse --environment tst
 ```
 
-Workspace IDs are configured in `workspaces.yml`. Override them via environment 
+Workspace IDs are configured in `lakehouse_solution.yml`. Override them via environment 
 variables: `{WORKSPACE_TYPE}_{ENVIRONMENT}_WORKSPACE_ID`, e.g., 
 `INGESTION_DEV_WORKSPACE_ID`.
 
@@ -139,7 +139,7 @@ not in the repo. Pass `--no-unpublish-orphans` to skip that step.
 
 The `setup_lakehouses.py` script creates lakehouse items directly in your Fabric 
 workspace using the Fabric REST API. Lakehouse names are defined in 
-`workspaces.yml` (data-driven configuration).
+`lakehouse_solution.yml` (data-driven configuration).
 
 Prerequisites:
 ```bash
@@ -158,12 +158,12 @@ python setup_lakehouses.py --environment prd
 ```
 
 This will:
-1. Read lakehouse names from `workspaces.yml` (`lakehouses` list)
+1. Read lakehouse names from `lakehouse_solution.yml` (`lakehouses` list)
 2. Get the target workspace ID for the specified environment
 3. Create each lakehouse using `fabric lakehouse create` CLI commands
 4. Skip lakehouses that already exist
 
-To add more lakehouses, simply update the `lakehouses` list in `workspaces.yml`:
+To add more lakehouses, simply update the `lakehouses` list in `lakehouse_solution.yml`:
 ```yaml
 lakehouses:
   - gold
@@ -234,7 +234,7 @@ Workflow: `.github/workflows/deploy-fabric.yml`.
 
 **Note:** 
 - Infrastructure deployment and Fabric deployment use the **same** service principal (client ID) but the infrastructure job requires `AZURE_SUBSCRIPTION_ID` for Bicep deployments.
-- Workspace IDs are read from `workspaces.yml`, which is automatically updated by the `setup_workspaces` job.
+- Workspace IDs are read from `lakehouse_solution.yml`, which is automatically updated by the `setup_workspaces` job.
 
 ## CI: Azure DevOps
 
@@ -284,7 +284,7 @@ Modify the parameter defaults in the YAML file to customize which workspaces and
 - Two separate service principals are used due to different RBAC requirements:
   - **Infrastructure SP**: Contributor on Azure subscription (for resource deployment)
   - **Fabric SP**: Contributor on Fabric capacity (for workspace/item deployment)
-- Workspace IDs are read from `workspaces.yml`, which is automatically updated by the `setup_workspaces` stage.
+- Workspace IDs are read from `lakehouse_solution.yml`, which is automatically updated by the `setup_workspaces` stage.
 
 ## Notes
 
@@ -296,5 +296,5 @@ Modify the parameter defaults in the YAML file to customize which workspaces and
   `az login` yourself; the GitHub Actions workflow uses `azure/login@v2` and
   the Azure DevOps pipeline uses the `AzureCLI@2` task, both of which
   establish an `az` CLI session that `AzureCliCredential` then reads.
-- Workspace IDs in `workspaces.yml` are placeholders until `setup_workspaces.py` is run.
+- Workspace IDs in `lakehouse_solution.yml` are placeholders until `setup_workspaces.py` is run.
   The pipeline automatically runs this script and commits any changes back to the repository.

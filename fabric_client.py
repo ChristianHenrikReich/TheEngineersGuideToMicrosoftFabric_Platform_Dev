@@ -10,7 +10,7 @@ import requests
 
 # Constants
 REPO_ROOT = Path(__file__).resolve().parent
-WORKSPACES_CONFIG = REPO_ROOT / "workspaces.yml"
+WORKSPACES_CONFIG = REPO_ROOT / "lakehouse_solution.yml"
 FABRIC_API_BASE = "https://api.fabric.microsoft.com/v1"
 
 
@@ -48,9 +48,29 @@ class FabricClient:
 
 
 def load_workspace_config(config_path: Path = WORKSPACES_CONFIG) -> dict:
-    """Load workspace configuration from workspaces.yml."""
+    """Load workspace configuration from lakehouse_solution.yml.
+    
+    Returns the 'workspaces' section of the config.
+    """
     if not config_path.is_file():
         raise SystemExit(f"Workspace config not found: {config_path}")
+
+    with config_path.open("r", encoding="utf-8") as fh:
+        data = yaml.safe_load(fh) or {}
+
+    if "workspaces" not in data:
+        raise SystemExit(f"'workspaces' section not found in {config_path}")
+
+    return data["workspaces"]
+
+
+def load_solution_config(config_path: Path = WORKSPACES_CONFIG) -> dict:
+    """Load full lakehouse solution configuration.
+    
+    Returns the complete config including solution_name and workspaces.
+    """
+    if not config_path.is_file():
+        raise SystemExit(f"Solution config not found: {config_path}")
 
     with config_path.open("r", encoding="utf-8") as fh:
         data = yaml.safe_load(fh) or {}

@@ -23,7 +23,7 @@ steps:
       scriptType: bash
       scriptLocation: inlineScript
       inlineScript: |
-        # Deploy - workspace IDs are read from workspaces.yml
+        # Deploy - workspace IDs are read from lakehouse_solution.yml
         python deploy.py \
           --workspace ${{ parameters.workspace }} \
           --environment ${{ parameters.environment }}

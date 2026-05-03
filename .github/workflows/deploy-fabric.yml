@@ -33,7 +33,7 @@ on:
 
 permissions:
   id-token: write   # for OIDC federated credential to Entra
-  contents: write   # for committing workspaces.yml changes
+  contents: write   # for committing lakehouse_solution.yml changes
 
 jobs:
   deploy_infrastructure:
@@ -85,18 +85,18 @@ jobs:
           echo "Running setup_workspaces.py to ensure all workspaces exist..."
           python setup_workspaces.py
       
-      - name: Commit workspaces.yml changes
+      - name: Commit lakehouse_solution.yml changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           
-          # Check if workspaces.yml has changes
-          if git diff --quiet workspaces.yml; then
-            echo "No changes to workspaces.yml"
+          # Check if lakehouse_solution.yml has changes
+          if git diff --quiet lakehouse_solution.yml; then
+            echo "No changes to lakehouse_solution.yml"
           else
-            echo "workspaces.yml was updated with workspace IDs"
-            git add workspaces.yml
-            git commit -m "chore: update workspaces.yml with Fabric workspace IDs [skip ci]"
+            echo "lakehouse_solution.yml was updated with workspace IDs"
+            git add lakehouse_solution.yml
+            git commit -m "chore: update lakehouse_solution.yml with Fabric workspace IDs [skip ci]"
             git push
             echo "Changes committed and pushed"
           fi
@@ -164,5 +164,5 @@ jobs:
           allow-no-subscriptions: true
       - name: Deploy ${{ matrix.workspace }} to ${{ matrix.environment }}
         run: |
-          # Workspace IDs are read from workspaces.yml (updated by setup_workspaces job)
+          # Workspace IDs are read from lakehouse_solution.yml (updated by setup_workspaces job)
           python deploy.py --workspace ${{ matrix.workspace }} --environment ${{ matrix.environment }}

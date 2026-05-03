@@ -116,15 +116,15 @@ def get_workspace_id(environment: str) -> str:
 
 
 def get_lakehouse_names() -> list[str]:
-    """Get the list of lakehouse names from workspaces.yml."""
+    """Get the list of lakehouse names from lakehouse_solution.yml."""
     config = load_workspace_config()
     
     if "lakehouse" not in config:
-        raise SystemExit("'lakehouse' workspace not found in workspaces.yml")
+        raise SystemExit("'lakehouse' workspace not found in lakehouse_solution.yml")
     
     lakehouse_config = config["lakehouse"]
     if "lakehouses" not in lakehouse_config:
-        raise SystemExit("'lakehouses' list not found under 'lakehouse' in workspaces.yml")
+        raise SystemExit("'lakehouses' list not found under 'lakehouse' in lakehouse_solution.yml")
     
     lakehouses = lakehouse_config["lakehouses"]
     if not isinstance(lakehouses, list) or not lakehouses:

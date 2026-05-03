@@ -81,7 +81,7 @@ class FabricWorkspaceManager(FabricClient):
 
 ### 4. Configuration Management
 
-**Rule:** `workspaces.yml` is the single source of truth for workspace IDs.
+**Rule:** `lakehouse_solution.yml` is the single source of truth for workspace IDs.
 
 Structure:
 ```yaml
@@ -115,10 +115,10 @@ steps:
 
 **Correct Pattern:**
 ```yaml
-# ✅ GOOD: Reads from workspaces.yml updated by setup stage
+# ✅ GOOD: Reads from lakehouse_solution.yml updated by setup stage
 steps:
-  - script: python setup_workspaces.py  # Updates workspaces.yml
-  - script: python deploy.py            # Reads from workspaces.yml
+  - script: python setup_workspaces.py  # Updates lakehouse_solution.yml
+  - script: python deploy.py            # Reads from lakehouse_solution.yml
 ```
 
 **Rationale:** Workspace IDs are created by `setup_workspaces.py`, so they can't exist before it runs.
@@ -199,7 +199,7 @@ fabric_client.py        # Shared Fabric REST API client
 setup_workspaces.py     # Create/update workspaces
 setup_lakehouses.py     # Create lakehouse items
 deploy.py               # Deploy Fabric items
-workspaces.yml          # Workspace ID mapping
+lakehouse_solution.yml  # Solution config with workspace IDs
 requirements-deploy.txt # Python dependencies
 ```
 
@@ -226,11 +226,11 @@ All Python scripts should:
 2. **Setup Stage/Job** - Create Fabric workspaces
    - Depends on infrastructure deployment completing
    - Execute `setup_workspaces.py`
-   - Commit `workspaces.yml` changes with `[skip ci]`
+   - Commit `lakehouse_solution.yml` changes with `[skip ci]`
    - Use `persistCredentials: true` / `token: ${{ secrets.GITHUB_TOKEN }}`
 
 3. **Deploy Stage/Job** - Runs after setup
-   - Read workspace IDs from `workspaces.yml`
+   - Read workspace IDs from `lakehouse_solution.yml`
    - NO workspace ID variables required
    - Use approval gates for tst/prd environments
 
