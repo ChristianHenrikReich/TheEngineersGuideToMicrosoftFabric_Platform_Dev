@@ -26,7 +26,7 @@ from fabric_cicd import (
 
 REPO_ROOT = Path(__file__).resolve().parent
 SOLUTION_ROOT = REPO_ROOT / "solution"
-WORKSPACES_CONFIG = REPO_ROOT / "lakehouse_solution.yml"
+SOLUTION_CONFIG = REPO_ROOT / "lakehouse_solution.yml"
 
 # Valid workspace types
 WORKSPACE_TYPES = ["ingestion", "lakehouse_processing", "lakehouse"]
@@ -40,7 +40,7 @@ ITEM_TYPE_IN_SCOPE = [
 ]
 
 
-def load_workspace_config(config_path: Path = WORKSPACES_CONFIG) -> dict:
+def load_workspace_config(config_path: Path = SOLUTION_CONFIG) -> dict:
     """Load workspace configuration from lakehouse_solution.yml.
     
     Returns a nested dict: {workspace_type: {environment: workspace_id}}
@@ -72,11 +72,11 @@ def get_workspace_id(workspace_type: str, environment: str) -> str:
     
     # Get from config file
     if workspace_type not in config:
-        raise SystemExit(f"Workspace type '{workspace_type}' not found in {WORKSPACES_CONFIG}")
+        raise SystemExit(f"Workspace type '{workspace_type}' not found in {SOLUTION_CONFIG}")
     
     if environment not in config[workspace_type]:
         raise SystemExit(
-            f"Environment '{environment}' not found for workspace '{workspace_type}' in {WORKSPACES_CONFIG}"
+            f"Environment '{environment}' not found for workspace '{workspace_type}' in {SOLUTION_CONFIG}"
         )
     
     # Extract workspace ID from config structure

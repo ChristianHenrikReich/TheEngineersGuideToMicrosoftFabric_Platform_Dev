@@ -10,7 +10,7 @@ import requests
 
 # Constants
 REPO_ROOT = Path(__file__).resolve().parent
-WORKSPACES_CONFIG = REPO_ROOT / "lakehouse_solution.yml"
+SOLUTION_CONFIG = REPO_ROOT / "lakehouse_solution.yml"
 FABRIC_API_BASE = "https://api.fabric.microsoft.com/v1"
 
 
@@ -68,7 +68,7 @@ def _resolve_aliases(data: dict | list | str, aliases: dict) -> dict | list | st
         return data
 
 
-def _preprocess_config(config_path: Path = WORKSPACES_CONFIG) -> dict:
+def _preprocess_config(config_path: Path = SOLUTION_CONFIG) -> dict:
     """Load and preprocess configuration with alias resolution.
     
     Loads lakehouse_solution.yml and resolves any alias references.
@@ -98,7 +98,7 @@ def _preprocess_config(config_path: Path = WORKSPACES_CONFIG) -> dict:
     return data
 
 
-def load_workspace_config(config_path: Path = WORKSPACES_CONFIG) -> dict:
+def load_workspace_config(config_path: Path = SOLUTION_CONFIG) -> dict:
     """Load workspace configuration from lakehouse_solution.yml.
     
     Resolves aliases and returns the 'workspaces' section of the config.
@@ -111,7 +111,7 @@ def load_workspace_config(config_path: Path = WORKSPACES_CONFIG) -> dict:
     return data["workspaces"]
 
 
-def load_solution_config(config_path: Path = WORKSPACES_CONFIG) -> dict:
+def load_solution_config(config_path: Path = SOLUTION_CONFIG) -> dict:
     """Load full lakehouse solution configuration.
     
     Resolves aliases and returns the complete config including solution_name and workspaces.

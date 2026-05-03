@@ -33,7 +33,7 @@ from pathlib import Path
 import requests
 import yaml
 
-from fabric_client import FabricClient, load_workspace_config, load_solution_config, WORKSPACES_CONFIG
+from fabric_client import FabricClient, load_workspace_config, load_solution_config, SOLUTION_CONFIG
 
 
 class FabricWorkspaceManager(FabricClient):
@@ -249,7 +249,7 @@ class FabricWorkspaceManager(FabricClient):
         return workspace_id
 
 
-def save_workspace_config(config: dict, solution_name: str, config_path: Path = WORKSPACES_CONFIG) -> None:
+def save_workspace_config(config: dict, solution_name: str, config_path: Path = SOLUTION_CONFIG) -> None:
     """Save workspace configuration to lakehouse_solution.yml.
     
     Preserves non-environment properties like 'lakehouses' lists.
@@ -289,7 +289,7 @@ def setup_workspaces(dry_run: bool = False) -> None:
     manager = FabricWorkspaceManager()
     
     print("Setting up Fabric workspaces...")
-    print(f"Configuration file: {WORKSPACES_CONFIG}\n")
+    print(f"Configuration file: {SOLUTION_CONFIG}\n")
     
     # Fetch existing workspaces from Fabric API
     print("Fetching existing workspaces from Fabric...")
