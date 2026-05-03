@@ -1,0 +1,29 @@
+# Azure DevOps template for deploying a Fabric workspace
+parameters:
+  - name: workspace
+    type: string
+  - name: environment
+    type: string
+
+steps:
+  - checkout: self
+  
+  - task: UsePythonVersion@0
+    displayName: Setup Python
+    inputs:
+      versionSpec: "3.12"
+  
+  - script: pip install -r requirements-deploy.txt
+    displayName: Install dependencies
+  
+  - task: AzureCLI@2
+    displayName: Deploy ${{ parameters.workspace }} workspace
+    inputs:
+      azureSubscription: $(azureServiceConnection)
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        # Deploy - workspace IDs are read from workspaces.yml
+        python deploy.py \
+          --workspace ${{ parameters.workspace }} \
+          --environment ${{ parameters.environment }}

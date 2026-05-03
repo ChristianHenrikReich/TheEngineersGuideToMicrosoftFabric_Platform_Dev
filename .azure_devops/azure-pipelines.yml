@@ -1,0 +1,153 @@
+# Azure DevOps pipeline for deploying Fabric items via fabric-cicd.
+#
+# Prerequisites in Azure DevOps:
+#   1. A service connection (Azure Resource Manager, workload identity federation
+#      recommended) named `fabric-deploy-sc` with the service principal that has
+#      access to the Fabric workspaces.
+#   2. Environments configured with approval checks where required (typically tst + prd).
+#
+# Note: Workspace IDs are read from workspaces.yml (updated by setup_workspaces.py).
+#       No variable groups needed for WORKSPACE_ID - it's managed in the repository.
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - solution/*
+      - deploy.py
+      - requirements-deploy.txt
+      - .azure_devops/*
+
+pr: none
+
+parameters:
+  # Workspace selection
+  - name: workspaces
+    displayName: Workspaces to Deploy
+    type: object
+    default:
+      - name: ingestion
+        displayName: Ingestion
+        deploy: true
+      - name: lakehouse_processing
+        displayName: Lakehouse Processing
+        deploy: true
+      - name: lakehouse
+        displayName: Lakehouse
+        deploy: true
+
+  # Environment configuration
+  - name: environments
+    displayName: Environments
+    type: object
+    default:
+      - name: dev
+        displayName: DEV
+        deploy: true
+        requiresApproval: false
+        dependsOn: []
+      - name: tst
+        displayName: TST
+        deploy: false
+        requiresApproval: true
+        dependsOn:
+          - deploy_dev
+      - name: prd
+        displayName: PRD
+        deploy: false
+        requiresApproval: true
+        dependsOn:
+          - deploy_tst
+
+variables:
+  pythonVersion: "3.12"
+  azureServiceConnection: "fabric-deploy-sc"
+
+stages:
+  # Setup workspaces and update workspaces.yml
+  - stage: setup_workspaces
+    displayName: Setup Workspaces
+    jobs:
+      - job: ensure_workspaces_exist
+        displayName: Ensure workspaces exist
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - checkout: self
+            persistCredentials: true
+          
+          - task: UsePythonVersion@0
+            displayName: Setup Python
+            inputs:
+              versionSpec: "$(pythonVersion)"
+          
+          - script: pip install -r requirements-deploy.txt
+            displayName: Install dependencies
+          
+          - task: AzureCLI@2
+            displayName: Setup Fabric workspaces
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                echo "Running setup_workspaces.py to ensure all workspaces exist..."
+                python setup_workspaces.py
+          
+          - script: |
+              git config user.name "Azure DevOps Pipeline"
+              git config user.email "pipeline@azuredevops.com"
+              
+              # Check if workspaces.yml has changes
+              if git diff --quiet workspaces.yml; then
+                echo "No changes to workspaces.yml"
+              else
+                echo "workspaces.yml was updated with workspace IDs"
+                git add workspaces.yml
+                git commit -m "chore: update workspaces.yml with Fabric workspace IDs [skip ci]"
+                git push origin HEAD:$(Build.SourceBranch)
+                echo "Changes committed and pushed"
+              fi
+            displayName: Commit workspaces.yml changes
+  
+  # Loop over each environment
+  - ${{ each env in parameters.environments }}:
+    - stage: deploy_${{ env.name }}
+      displayName: Deploy to ${{ env.displayName }}
+      condition: eq('${{ env.deploy }}', 'True')
+      dependsOn:
+        - setup_workspaces
+        - ${{ each dep in env.dependsOn }}:
+          - ${{ dep }}
+      jobs:
+        # Loop over each workspace
+        - ${{ each workspace in parameters.workspaces }}:
+          - ${{ if eq(workspace.deploy, true) }}:
+            # DEV uses regular jobs, TST/PRD use deployment jobs with approval gates
+            - ${{ if eq(env.requiresApproval, false) }}:
+              - job: deploy_${{ workspace.name }}_${{ env.name }}
+                displayName: Deploy ${{ workspace.displayName }}
+                pool:
+                  vmImage: ubuntu-latest
+                steps:
+                  - template: templates/deploy-workspace.yml
+                    parameters:
+                      workspace: ${{ workspace.name }}
+                      environment: ${{ env.name }}
+            
+            - ${{ if eq(env.requiresApproval, true) }}:
+              - deployment: deploy_${{ workspace.name }}_${{ env.name }}
+                displayName: Deploy ${{ workspace.displayName }}
+                environment: fabric-${{ env.name }}
+                pool:
+                  vmImage: ubuntu-latest
+                strategy:
+                  runOnce:
+                    deploy:
+                      steps:
+                        - template: templates/deploy-workspace.yml
+                          parameters:
+                            workspace: ${{ workspace.name }}
+                            environment: ${{ env.name }}

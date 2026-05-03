@@ -1,0 +1,142 @@
+name: Deploy Fabric items
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "solution/**"
+      - "deploy.py"
+      - "requirements-deploy.txt"
+      - ".github/workflows/deploy-fabric.yml"
+  workflow_dispatch:
+    inputs:
+      workspaces:
+        description: "Workspaces to deploy"
+        required: true
+        type: choice
+        options:
+          - all
+          - ingestion
+          - lakehouse_processing
+          - lakehouse
+        default: all
+      environments:
+        description: "Environments to deploy"
+        required: true
+        type: choice
+        options:
+          - dev
+          - tst
+          - prd
+        default: dev
+
+permissions:
+  id-token: write   # for OIDC federated credential to Entra
+  contents: write   # for committing workspaces.yml changes
+
+jobs:
+  setup_workspaces:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      
+      - run: pip install -r requirements-deploy.txt
+      
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+      
+      - name: Setup Fabric workspaces
+        run: |
+          echo "Running setup_workspaces.py to ensure all workspaces exist..."
+          python setup_workspaces.py
+      
+      - name: Commit workspaces.yml changes
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          
+          # Check if workspaces.yml has changes
+          if git diff --quiet workspaces.yml; then
+            echo "No changes to workspaces.yml"
+          else
+            echo "workspaces.yml was updated with workspace IDs"
+            git add workspaces.yml
+            git commit -m "chore: update workspaces.yml with Fabric workspace IDs [skip ci]"
+            git push
+            echo "Changes committed and pushed"
+          fi
+
+  setup:
+    needs: setup_workspaces
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - id: set
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          SELECTED_WORKSPACES: ${{ inputs.workspaces }}
+          SELECTED_ENVIRONMENT: ${{ inputs.environments }}
+        run: |
+          python <<'EOF' >> "$GITHUB_OUTPUT"
+          import json, os
+
+          all_workspaces = ["ingestion", "lakehouse_processing", "lakehouse"]
+          all_environments = ["dev", "tst", "prd"]
+
+          # Determine workspaces to deploy
+          if os.environ["EVENT_NAME"] == "push":
+              # On push to main, deploy all workspaces to dev
+              workspaces = all_workspaces
+              environment = "dev"
+          else:
+              # Manual trigger
+              selected_ws = os.environ.get("SELECTED_WORKSPACES", "all")
+              workspaces = all_workspaces if selected_ws == "all" else [selected_ws]
+              environment = os.environ.get("SELECTED_ENVIRONMENT", "dev")
+
+          # Build matrix
+          included = []
+          for ws in workspaces:
+              included.append({
+                  "workspace": ws,
+                  "environment": environment,
+                  "env_name": f"fabric-{environment}"
+              })
+
+          print(f"matrix={json.dumps({'include': included})}")
+          EOF
+
+  deploy:
+    needs: setup
+    if: fromJSON(needs.setup.outputs.matrix).include[0] != null
+    runs-on: ubuntu-latest
+    environment: ${{ matrix.env_name }}
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-deploy.txt
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+      - name: Deploy ${{ matrix.workspace }} to ${{ matrix.environment }}
+        run: |
+          # Workspace IDs are read from workspaces.yml (updated by setup_workspaces job)
+          python deploy.py --workspace ${{ matrix.workspace }} --environment ${{ matrix.environment }}

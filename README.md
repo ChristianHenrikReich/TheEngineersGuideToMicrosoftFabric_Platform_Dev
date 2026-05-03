@@ -177,24 +177,15 @@ Workflow: `.github/workflows/deploy-fabric.yml`.
 
 **One-time setup:**
 
-1. Create a service principal and grant it Contributor on all Fabric workspaces.
+1. Create a service principal and grant it Contributor access to your Fabric capacity.
 2. Add **federated credentials** on the SP for this repo (subject
    `repo:<owner>/<repo>:environment:fabric-dev`, etc.).
 3. Repo secrets: `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`.
 4. GitHub Environments: `fabric-dev`, `fabric-tst`, `fabric-prd` with required reviewers 
    on tst and prd.
-5. Add workspace ID variables to each environment:
-   ```
-   INGESTION_DEV_WORKSPACE_ID
-   INGESTION_TST_WORKSPACE_ID
-   INGESTION_PRD_WORKSPACE_ID
-   LAKEHOUSE_PROCESSING_DEV_WORKSPACE_ID
-   LAKEHOUSE_PROCESSING_TST_WORKSPACE_ID
-   LAKEHOUSE_PROCESSING_PRD_WORKSPACE_ID
-   LAKEHOUSE_DEV_WORKSPACE_ID
-   LAKEHOUSE_TST_WORKSPACE_ID
-   LAKEHOUSE_PRD_WORKSPACE_ID
-   ```
+
+**Note:** Workspace IDs are read from `workspaces.yml`, which is automatically updated by the 
+`setup_workspaces` job. No environment variables needed for workspace configuration.
 
 ## CI: Azure DevOps
 
@@ -226,16 +217,12 @@ Modify the parameter defaults in the YAML file to customize which workspaces and
 
 **One-time setup:**
 
-1. Create a service principal with Contributor on all workspaces.
-2. Service connection \`fabric-deploy-sc\` (Azure Resource Manager) bound to that SP.
-3. Variable groups per workspace-environment combination:
-   \`\`\`
-   fabric-ingestion-dev, fabric-ingestion-tst, fabric-ingestion-prd
-   fabric-processing-dev, fabric-processing-tst, fabric-processing-prd
-   fabric-lakehouse-dev, fabric-lakehouse-tst, fabric-lakehouse-prd
-   \`\`\`
-   Each with a \`WORKSPACE_ID\` variable containing the Fabric workspace GUID.
-4. Environments \`fabric-tst\` and \`fabric-prd\` with approval checks.
+1. Create a service principal with Contributor access to your Fabric capacity.
+2. Create service connection `fabric-deploy-sc` (Azure Resource Manager) in Azure DevOps linked to that SP.
+3. Create environments `fabric-tst` and `fabric-prd` with approval checks.
+
+**Note:** Workspace IDs are read from `workspaces.yml`, which is automatically updated by the 
+`setup_workspaces` stage. No variable groups needed for workspace configuration.
 
 ## Notes
 
