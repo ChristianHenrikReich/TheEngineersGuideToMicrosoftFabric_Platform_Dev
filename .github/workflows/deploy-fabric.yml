@@ -1,10 +1,11 @@
-name: Deploy Fabric items
+name: Deploy Infrastructure and Fabric items
 
 on:
   push:
     branches: [main]
     paths:
       - "solution/**"
+      - "infrastructure/**"
       - "deploy.py"
       - "requirements-deploy.txt"
       - ".github/workflows/deploy-fabric.yml"
@@ -35,7 +36,32 @@ permissions:
   contents: write   # for committing workspaces.yml changes
 
 jobs:
+  deploy_infrastructure:
+    runs-on: ubuntu-latest
+    # For push events, deploy to dev. For manual triggers, use selected environment.
+    environment: ${{ github.event_name == 'push' && 'fabric-dev' || format('fabric-{0}', inputs.environments) }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Deploy Azure infrastructure
+        env:
+          ENVIRONMENT: ${{ github.event_name == 'push' && 'dev' || inputs.environments }}
+        run: |
+          echo "Deploying infrastructure to $ENVIRONMENT environment..."
+          az deployment sub create \
+            --location norwayeast \
+            --template-file infrastructure/main.bicep \
+            --parameters infrastructure/parameters/main.$ENVIRONMENT.bicepparam \
+            --name "lakehouse-infra-$ENVIRONMENT-${{ github.run_number }}"
+
   setup_workspaces:
+    needs: deploy_infrastructure
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
