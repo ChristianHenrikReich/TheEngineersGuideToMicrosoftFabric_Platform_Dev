@@ -23,6 +23,7 @@ import argparse
 import sys
 from pathlib import Path
 
+import requests
 import yaml
 
 from fabric_client import FabricClient, load_workspace_config, load_solution_config, WORKSPACES_CONFIG
@@ -54,6 +55,9 @@ class FabricWorkspaceManager(FabricClient):
             
         Returns:
             Workspace ID
+            
+        Raises:
+            RuntimeError: If workspace creation fails or returns no ID
         """
         payload = {
             "displayName": name,
@@ -61,11 +65,23 @@ class FabricWorkspaceManager(FabricClient):
         if description:
             payload["description"] = description
         
-        result = self._api_request("POST", "/workspaces", json_data=payload)
+        print(f"  → Calling Fabric API to create workspace '{name}'...")
+        
+        try:
+            result = self._api_request("POST", "/workspaces", json_data=payload)
+        except requests.exceptions.HTTPError as e:
+            print(f"\n❌ FAILED to create workspace '{name}'")
+            print(f"   HTTP Error: {e}")
+            print(f"   This usually means:")
+            print(f"   1. Service principal lacks 'Workspace creation' permission")
+            print(f"   2. Tenant setting 'Service principals can use Fabric APIs' is disabled")
+            print(f"   3. Service principal is not in an enabled security group")
+            raise
+        
         workspace_id = result.get("id")
         
         if not workspace_id:
-            raise RuntimeError(f"Failed to create workspace '{name}': no ID returned")
+            raise RuntimeError(f"Failed to create workspace '{name}': no ID returned from API")
         
         print(f"✓ Created workspace: {name} ({workspace_id})")
         return workspace_id
@@ -133,9 +149,29 @@ def setup_workspaces(dry_run: bool = False) -> None:
     
     # Fetch existing workspaces from Fabric API
     print("Fetching existing workspaces from Fabric...")
-    existing_workspaces = manager.list_workspaces()
-    print(f"Found {len(existing_workspaces)} existing workspace(s)\n")
+    try:
+        existing_workspaces = manager.list_workspaces()
+        print(f"Found {len(existing_workspaces)} existing workspace(s)")
+        
+        if existing_workspaces:
+            print("Existing workspaces:")
+            for name, ws_id in list(existing_workspaces.items())[:5]:
+                print(f"  - {name} ({ws_id})")
+            if len(existing_workspaces) > 5:
+                print(f"  ... and {len(existing_workspaces) - 5} more")
+        else:
+            print("\n⚠️  WARNING: No workspaces found!")
+            print("   This could mean:")
+            print("   1. Service principal can't list workspaces (permission issue)")
+            print("   2. No workspaces exist yet (expected on first run)")
+            print("   3. Service principal doesn't have Viewer access to any workspace\n")
+    except requests.exceptions.HTTPError as e:
+        print(f"\n❌ FAILED to list workspaces from Fabric API")
+        print(f"   HTTP Error: {e}")
+        print(f"   Check service principal permissions!")
+        raise
     
+    print()
     updated = False
     
     for workspace_type, environments in config.items():
