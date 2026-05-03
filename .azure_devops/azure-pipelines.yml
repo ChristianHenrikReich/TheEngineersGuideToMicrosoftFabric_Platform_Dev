@@ -122,7 +122,7 @@ stages:
                           az deployment sub create \
                             --location norwayeast \
                             --template-file infrastructure/main.bicep \
-                            --parameters infrastructure/parameters/main.${{ env.name }}.bicepparam \
+                            --parameters @infrastructure/parameters/main.${{ env.name }}.parameters.json \
                             --name "lakehouse-infra-${{ env.name }}-$(Build.BuildId)"
 
   # Setup workspaces and update workspaces.yml

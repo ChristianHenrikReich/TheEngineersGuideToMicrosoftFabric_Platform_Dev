@@ -57,7 +57,7 @@ jobs:
           az deployment sub create \
             --location norwayeast \
             --template-file infrastructure/main.bicep \
-            --parameters infrastructure/parameters/main.$ENVIRONMENT.bicepparam \
+            --parameters @infrastructure/parameters/main.$ENVIRONMENT.parameters.json \
             --name "lakehouse-infra-$ENVIRONMENT-${{ github.run_number }}"
 
   setup_workspaces:

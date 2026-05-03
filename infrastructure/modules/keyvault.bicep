@@ -1,55 +1,68 @@
 // Key Vault module for secure storage of connection strings and keys
-// Configured with soft delete, purge protection, and RBAC
+// Configured with soft delete and RBAC
+// Note: Purge protection intentionally excluded (irreversible once enabled)
 
-@description('Key Vault name')
+@description('Name of the Key Vault')
 param keyVaultName string
 
-@description('Azure region')
-param location string
+@description('Location for the Key Vault')
+param location string = resourceGroup().location
 
-@description('Environment name')
+@description('Environment name (dev, tst, prd)')
 param environment string
 
-@description('Resource tags')
-param tags object
+@description('Tags to apply to the Key Vault')
+param tags object = {}
 
-@description('Enable soft delete')
+@description('SKU name for the Key Vault')
+@allowed([
+  'standard'
+  'premium'
+])
+param skuName string = 'standard'
+
+@description('Enable soft delete for the Key Vault')
 param enableSoftDelete bool = true
 
-@description('Soft delete retention days')
+@description('Soft delete retention in days')
 @minValue(7)
 @maxValue(90)
 param softDeleteRetentionInDays int = 90
 
-@description('Enable purge protection')
-param enablePurgeProtection bool = true
-
 @description('Enable RBAC authorization')
 param enableRbacAuthorization bool = true
 
-// Key Vault resource
+@description('Tenant ID for the Key Vault')
+param tenantId string = subscription().tenantId
+
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyVaultName
   location: location
-  tags: tags
+  tags: union(tags, {
+    environment: environment
+  })
   properties: {
     sku: {
       family: 'A'
-      name: 'standard'
+      name: skuName
     }
-    tenantId: subscription().tenantId
+    tenantId: tenantId
     enableSoftDelete: enableSoftDelete
     softDeleteRetentionInDays: softDeleteRetentionInDays
-    enablePurgeProtection: enablePurgeProtection ? true : null
     enableRbacAuthorization: enableRbacAuthorization
+    publicNetworkAccess: 'Enabled'
     networkAcls: {
-      defaultAction: 'Allow' // Can be restricted to 'Deny' with specific rules
       bypass: 'AzureServices'
+      defaultAction: 'Allow'
     }
   }
 }
 
-// Outputs
-output keyVaultName string = keyVault.name
+@description('Key Vault resource ID')
 output keyVaultId string = keyVault.id
+
+@description('Key Vault name')
+output keyVaultName string = keyVault.name
+
+@description('Key Vault URI')
 output keyVaultUri string = keyVault.properties.vaultUri

@@ -6,20 +6,20 @@ Azure infrastructure deployment for the Lakehouse Solution using Bicep.
 
 ```
 infrastructure/
-├── main.bicep                          # Main subscription-scoped template
+├── main.bicep                           # Main subscription-scoped template
 ├── modules/
-│   └── keyvault.bicep                  # Key Vault module
+│   └── keyvault.bicep                   # Key Vault module
 ├── parameters/
-│   ├── main.dev.bicepparam             # DEV environment parameters
-│   ├── main.tst.bicepparam             # TST environment parameters
-│   └── main.prd.bicepparam             # PRD environment parameters
-└── README.md                           # This file
+│   ├── main.dev.parameters.json         # DEV environment parameters
+│   ├── main.tst.parameters.json         # TST environment parameters
+│   └── main.prd.parameters.json         # PRD environment parameters
+└── README.md                            # This file
 ```
 
 ## Resources Deployed
 
-- **Resource Group**: Environment-specific resource group for infrastructure
-- **Key Vault**: Secure storage for connection strings, keys, and secrets
+- **Resource Group**: `rg-{projectName}-{environment}` (automatically created)
+- **Key Vault**: `{projectAbbr}kv{env}{uniqueString}` (max 24 chars, RBAC-enabled)
 
 ## Local Deployment
 
@@ -35,7 +35,7 @@ infrastructure/
 az deployment sub create \
   --location norwayeast \
   --template-file infrastructure/main.bicep \
-  --parameters infrastructure/parameters/main.dev.bicepparam
+  --parameters @infrastructure/parameters/main.dev.parameters.json
 ```
 
 ### Deploy to Test
@@ -44,7 +44,7 @@ az deployment sub create \
 az deployment sub create \
   --location norwayeast \
   --template-file infrastructure/main.bicep \
-  --parameters infrastructure/parameters/main.tst.bicepparam
+  --parameters @infrastructure/parameters/main.tst.parameters.json
 ```
 
 ### Deploy to Production
@@ -53,7 +53,7 @@ az deployment sub create \
 az deployment sub create \
   --location norwayeast \
   --template-file infrastructure/main.bicep \
-  --parameters infrastructure/parameters/main.prd.bicepparam
+  --parameters @infrastructure/parameters/main.prd.parameters.json
 ```
 
 ## CI/CD Deployment
@@ -74,20 +74,31 @@ Infrastructure is deployed automatically via Azure DevOps and GitHub Actions pip
 
 ## Parameters
 
-Edit the `.bicepparam` files in `parameters/` to customize:
+Edit the `.parameters.json` files in `parameters/` to customize:
 
+- `environment`: Environment name (dev, tst, prd)
 - `location`: Azure region (default: norwayeast)
-- `resourceGroupName`: Resource group name pattern
-- `keyVaultName`: Key Vault name (must be globally unique)
+- `projectName`: Project prefix for resource names (default: lakehouse)
+- `keyVaultSku`: Key Vault SKU (standard or premium, default: standard)
 - `tags`: Resource tags for organization and cost tracking
+
+## Naming Convention
+
+Resources follow Azure best practices with uniqueString for global uniqueness:
+
+- **Resource Group**: `rg-{projectName}-{environment}` (e.g., `rg-lakehouse-dev`)
+- **Key Vault**: `{projectAbbr}kv{env}{uniqueString}` (e.g., `lakehokv dev1234567890abc`)
+  - Max 24 characters
+  - Globally unique using subscription ID and resource group hash
 
 ## Key Vault Configuration
 
 The Key Vault is configured with:
 - **RBAC Authorization**: Enabled (no access policies, use Azure RBAC roles)
 - **Soft Delete**: Enabled with 90-day retention
-- **Purge Protection**: Enabled (prevents permanent deletion during retention period)
-- **Network Access**: Allow from all networks (can be restricted to specific VNets/IPs)
+- **Purge Protection**: **NOT enabled** (intentional - irreversible once set)
+- **Public Network Access**: Enabled
+- **Network ACLs**: Allow Azure Services, default action Allow
 
 ### Required RBAC Roles
 
@@ -96,6 +107,8 @@ The Key Vault is configured with:
 
 ## Notes
 
-- Key Vault names must be globally unique (3-24 characters, alphanumeric and hyphens)
-- Soft delete retention is 90 days (cannot be changed after creation if purge protection is enabled)
+- Key Vault names are automatically generated using uniqueString for global uniqueness
+- Soft delete retention is 90 days
+- Purge protection intentionally excluded (irreversible once enabled, per data_platform best practices)
 - Uses subscription-scoped deployment (`targetScope = 'subscription'`) to create resource groups
+- Production-ready configuration based on battle-tested data_platform repository
