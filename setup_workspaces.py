@@ -3,8 +3,9 @@
 This script ensures all required Fabric workspaces exist and updates the
 workspaces.yml configuration file with their actual workspace IDs.
 
-Workspace naming convention: {workspace_type}-{environment}
-Examples: ingestion-dev, lakehouse-prd, lakehouse_processing-tst
+Workspace naming convention: {solution_name}-{workspace_type}-{environment}
+Solution name: main
+Examples: main-ingestion-dev, main-lakehouse-prd, main-lakehouse_processing-tst
 
 Local usage:
     az login
@@ -139,7 +140,8 @@ def setup_workspaces(dry_run: bool = False) -> None:
                 continue
             
             # Generate workspace name following convention
-            workspace_name = f"{workspace_type}-{environment}"
+            solution_name = "main"
+            workspace_name = f"{solution_name}-{workspace_type}-{environment}"
             
             # Check if workspace exists in Fabric
             workspace_exists_in_fabric = workspace_name in existing_workspaces

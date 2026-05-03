@@ -103,7 +103,7 @@ python setup_workspaces.py --dry-run
 
 This script:
 1. Lists all accessible Fabric workspaces via REST API
-2. Creates missing workspaces (named `{workspace_type}-{environment}`)
+2. Creates missing workspaces (named `main-{workspace_type}-{environment}`)
 3. Updates `workspaces.yml` with actual workspace IDs
 
 **Note:** Uses the shared `fabric_client.py` module for Fabric REST API operations.

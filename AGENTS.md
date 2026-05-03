@@ -23,12 +23,14 @@ Multi-environment Microsoft Fabric deployment solution with automated workspace 
 
 ## Workspace Naming Convention
 
-Format: `{workspace_type}-{environment}`
+Format: `{solution_name}-{workspace_type}-{environment}`
+
+Solution name: `main`
 
 Examples:
-- `ingestion-dev`
-- `lakehouse_processing-tst`
-- `lakehouse-prd`
+- `main-ingestion-dev`
+- `main-lakehouse_processing-tst`
+- `main-lakehouse-prd`
 
 ## Architecture Decisions
 
