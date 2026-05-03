@@ -109,18 +109,14 @@ def get_workspace_id(environment: str) -> str:
     
     env_config = lakehouse_config[environment]
     
-    # Handle new dict structure with 'id' key
-    if isinstance(env_config, dict):
-        workspace_id = env_config.get('id')
-        if not workspace_id:
-            raise SystemExit(f"No workspace ID found for environment '{environment}'")
-        return workspace_id
+    # Extract workspace ID from dict structure
+    if not isinstance(env_config, dict) or 'id' not in env_config:
+        raise SystemExit(
+            f"Invalid workspace configuration for lakehouse/{environment}. "
+            f"Expected dict with 'id' key."
+        )
     
-    # Backward compatibility - if still a string
-    if isinstance(env_config, str):
-        return env_config
-    
-    raise SystemExit(f"Invalid workspace configuration for environment '{environment}'")
+    return env_config['id']
 
 
 def get_lakehouse_names() -> list[str]:
