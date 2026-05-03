@@ -268,7 +268,7 @@ Workflow: `.github/workflows/deploy-fabric.yml`.
 
 2. **setup_workspaces** - Runs `setup_workspaces.py` to ensure all Fabric workspaces exist
    - Depends on `deploy_infrastructure` completing successfully
-   - If `workspaces.yml` is updated with new workspace IDs, changes are committed back to the repository
+   - If `lakehouse_solution.yml` is updated with new workspace IDs, changes are committed back to the repository
    - Commit message includes `[skip ci]` to prevent triggering another workflow run
 
 3. **setup** - Creates deployment matrix based on trigger type
@@ -319,7 +319,7 @@ Pipeline: `.azure_devops/azure-pipelines.yml`.
 
 2. **Setup Workspaces** - Runs `setup_workspaces.py` to ensure all Fabric workspaces exist
    - Depends on all infrastructure deployments completing successfully
-   - If `workspaces.yml` is updated with new workspace IDs, changes are committed back to the repository
+   - If `lakehouse_solution.yml` is updated with new workspace IDs, changes are committed back to the repository
    - Commit message includes `[skip ci]` to prevent triggering another pipeline run
    
 3. **Deploy to Environments** - Deploys Fabric items to selected environments (dev/tst/prd)

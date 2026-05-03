@@ -1,4 +1,4 @@
-"""Setup Fabric workspaces and update workspaces.yml with their IDs.
+"""Setup Fabric workspaces and update lakehouse_solution.yml with their IDs.
 
 This script ensures all Fabric workspaces match the configuration defined in
 lakehouse_solution.yml, treating the YAML file as the source of truth.

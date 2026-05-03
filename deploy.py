@@ -26,7 +26,7 @@ from fabric_cicd import (
 
 REPO_ROOT = Path(__file__).resolve().parent
 SOLUTION_ROOT = REPO_ROOT / "solution"
-WORKSPACES_CONFIG = REPO_ROOT / "workspaces.yml"
+WORKSPACES_CONFIG = REPO_ROOT / "lakehouse_solution.yml"
 
 # Valid workspace types
 WORKSPACE_TYPES = ["ingestion", "lakehouse_processing", "lakehouse"]
