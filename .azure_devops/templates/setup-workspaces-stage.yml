@@ -17,9 +17,7 @@ stages:
   - stage: setup_workspaces
     displayName: Setup Workspaces
     dependsOn:
-      - ${{ each env in parameters.environments }}:
-        - ${{ if eq(env.deploy, true) }}:
-          - deploy_infrastructure_${{ env.name }}
+      - deploy_infrastructure_dev
     jobs:
       - job: ensure_workspaces_exist
         displayName: Ensure workspaces exist

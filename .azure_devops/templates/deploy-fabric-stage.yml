@@ -16,6 +16,7 @@ stages:
     condition: eq('${{ parameters.environment.deploy }}', 'True')
     dependsOn:
       - setup_workspaces
+      - deploy_infrastructure_${{ parameters.environment.name }}
       - ${{ each dep in parameters.environment.dependsOn }}:
         - ${{ dep }}
     jobs:
