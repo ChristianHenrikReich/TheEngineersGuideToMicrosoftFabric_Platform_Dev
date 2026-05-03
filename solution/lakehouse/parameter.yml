@@ -1,0 +1,7 @@
+# fabric-cicd parameter file for lakehouse workspace
+# https://microsoft.github.io/fabric-cicd/latest/how_to/parameterization/
+#
+# Lakehouse artifacts typically don't require parameterization,
+# but you can add environment-specific settings here if needed.
+
+find_replace: []

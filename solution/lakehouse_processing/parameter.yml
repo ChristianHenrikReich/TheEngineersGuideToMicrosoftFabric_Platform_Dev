@@ -1,0 +1,21 @@
+# fabric-cicd parameter file for lakehouse_processing workspace
+# https://microsoft.github.io/fabric-cicd/latest/how_to/parameterization/
+#
+# Per-environment substitutions for processing notebooks/pipelines.
+
+find_replace:
+  # Example: Reference to gold lakehouse
+  # - find_value: "GOLD_LAKEHOUSE_ID"
+  #   replace_value:
+  #     DEV:  "$items.Lakehouse.gold.$id"
+  #     TEST: "$items.Lakehouse.gold.$id"
+  #     PROD: "$items.Lakehouse.gold.$id"
+  #   item_type: "Notebook"
+
+  # Example: Reference to silver lakehouse
+  # - find_value: "SILVER_LAKEHOUSE_ID"
+  #   replace_value:
+  #     DEV:  "$items.Lakehouse.silver.$id"
+  #     TEST: "$items.Lakehouse.silver.$id"
+  #     PROD: "$items.Lakehouse.silver.$id"
+  #   item_type: "Notebook"

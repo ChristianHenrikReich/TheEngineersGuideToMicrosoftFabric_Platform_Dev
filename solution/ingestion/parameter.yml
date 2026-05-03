@@ -1,0 +1,22 @@
+# fabric-cicd parameter file for ingestion workspace
+# https://microsoft.github.io/fabric-cicd/latest/how_to/parameterization/
+#
+# Per-environment substitutions applied to Fabric items in this workspace
+# at publish time. Environment keys must match the --environment argument (DEV/TEST/PROD).
+
+find_replace:
+  # Key Vault URL referenced by notebooks
+  - find_value: "https://mugatomasterkv87234.vault.azure.net/"
+    replace_value:
+      DEV: "https://REPLACE-dev-kv.vault.azure.net/"
+      TEST: "https://REPLACE-test-kv.vault.azure.net/"
+      PROD: "https://REPLACE-prod-kv.vault.azure.net/"
+    item_type: "Notebook"
+
+  # Key Vault secret name holding the SQL connection string
+  - find_value: "FabricReader"
+    replace_value:
+      DEV: "FabricReader-Dev"
+      TEST: "FabricReader-Test"
+      PROD: "FabricReader-Prod"
+    item_type: "Notebook"
