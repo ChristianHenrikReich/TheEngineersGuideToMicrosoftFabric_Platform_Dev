@@ -85,22 +85,37 @@ class FabricWorkspaceManager(FabricClient):
 
 Structure:
 ```yaml
-{workspace_type}:
-  dev: "workspace-id-or-placeholder"
-  tst: "workspace-id-or-placeholder"
-  prd: "workspace-id-or-placeholder"
-  lakehouses:  # Optional property for lakehouse workspace
-    - bronze
-    - silver
-  warehouses:  # Optional property for warehouse items
-    - gold
+solution_name: main
+
+alias:
+  dev_capacity: "actual-capacity-id"  # Reusable values
+
+workspaces:
+  {workspace_type}:
+    dev:
+      id: "workspace-id-or-placeholder"
+      capacity: dev_capacity  # Can reference alias
+    tst:
+      id: "workspace-id-or-placeholder"
+      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
+    prd:
+      id: "workspace-id-or-placeholder"
+      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
+    lakehouses:  # Optional property for lakehouse workspace
+      - bronze
+      - silver
+    warehouses:  # Optional property for warehouse items
+      - gold
 ```
 
 **Key Points:**
+- Each environment entry is an **object** with `id` and `capacity` properties
+- **Aliases** allow reusing common values (e.g., capacity IDs across multiple workspaces)
 - `setup_workspaces.py` updates this file with actual IDs from Fabric API
 - `deploy.py` reads from this file (with optional env var overrides)
 - Environment variables are **optional overrides**, not required
 - File is committed to git and updated by CI/CD
+- All scripts use `_preprocess_config()` from `fabric_client.py` to automatically resolve aliases
 
 ### 5. No Circular Dependencies
 

@@ -110,6 +110,41 @@ This script:
 
 **Note:** Uses the shared `fabric_client.py` module for Fabric REST API operations.
 
+## Configuration Aliases
+
+The `lakehouse_solution.yml` supports **aliases** to avoid repeating common values like capacity IDs. 
+
+Define aliases in the `alias` section and reference them throughout the configuration:
+
+```yaml
+solution_name: main
+
+alias:
+  dev_capacity: "your-actual-capacity-id-here"
+  tst_capacity: "another-capacity-id"
+
+workspaces:
+  ingestion:
+    dev:
+      id: "workspace-id"
+      capacity: dev_capacity  # References alias above
+    tst:
+      id: "workspace-id"
+      capacity: tst_capacity  # References alias above
+```
+
+**Benefits:**
+- Define capacity IDs once, use everywhere
+- Easy to update - change one place, affects all references
+- Reduces configuration errors
+- Works with any string value (not just capacity IDs)
+
+**How it works:**
+- All scripts use `_preprocess_config()` from `fabric_client.py`
+- Aliases are resolved automatically when loading configuration
+- Alias values can reference workspace IDs, capacity IDs, or any other string value
+- Aliases are resolved recursively throughout the entire configuration
+
 ## Deploy locally
 
 Prereqs: Python 3.12, the Azure CLI, and access to the target Fabric workspace.
