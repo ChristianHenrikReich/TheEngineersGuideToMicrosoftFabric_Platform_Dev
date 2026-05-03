@@ -113,20 +113,16 @@ class FabricWorkspaceManager(FabricClient):
         return self.create_workspace(name, description, capacity_id)
 
 
-def save_workspace_config(config: dict, solution_name: str, capacity_config: dict | None = None, config_path: Path = WORKSPACES_CONFIG) -> None:
+def save_workspace_config(config: dict, solution_name: str, config_path: Path = WORKSPACES_CONFIG) -> None:
     """Save workspace configuration to lakehouse_solution.yml.
     
-    Preserves non-environment properties like 'lakehouses' lists and capacity settings.
+    Preserves non-environment properties like 'lakehouses' lists.
+    Structure: each environment is {id: workspace_id, capacity: capacity_id}
     """
     full_config = {
         "solution_name": solution_name,
+        "workspaces": config
     }
-    
-    # Add capacity configuration if provided (per workspace type and environment)
-    if capacity_config:
-        full_config["capacity"] = capacity_config
-    
-    full_config["workspaces"] = config
     
     with config_path.open("w", encoding="utf-8") as fh:
         # Write header comment
@@ -153,28 +149,11 @@ def setup_workspaces(dry_run: bool = False) -> None:
     full_config = load_solution_config()
     solution_name = full_config.get("solution_name", "main")
     config = full_config.get("workspaces", {})
-    capacity_config = full_config.get("capacity", {})
     
     manager = FabricWorkspaceManager()
     
     print("Setting up Fabric workspaces...")
-    print(f"Configuration file: {WORKSPACES_CONFIG}")
-    
-    # Show capacity configuration
-    if capacity_config:
-        print("\nCapacity configuration:")
-        for ws_type, envs in capacity_config.items():
-            if isinstance(envs, dict):
-                print(f"  {ws_type}:")
-                for env, cap_id in envs.items():
-                    if cap_id != "REPLACE_WITH_YOUR_CAPACITY_ID":
-                        print(f"    {env}: {cap_id}")
-                    else:
-                        print(f"    {env}: (not configured)")
-    else:
-        print("\n⚠️  No capacity configuration found - workspaces will use trial/default capacity")
-    
-    print()
+    print(f"Configuration file: {WORKSPACES_CONFIG}\n")
     
     # Fetch existing workspaces from Fabric API
     print("Fetching existing workspaces from Fabric...")
@@ -209,19 +188,27 @@ def setup_workspaces(dry_run: bool = False) -> None:
         
         print(f"\n--- Workspace type: {workspace_type} ---")
         
-        for environment, current_id in environments.items():
-            # Skip non-environment properties (e.g., 'lakehouses' lists)
-            if not isinstance(current_id, str):
+        for environment, env_config in environments.items():
+            # Skip non-environment properties (e.g., 'lakehouses', 'warehouses' lists)
+            if not isinstance(env_config, dict):
                 continue
+            if 'id' not in env_config:
+                continue  # Skip if not a proper workspace config
             
             # Generate workspace name following convention
             workspace_name = f"{solution_name}-{workspace_type}-{environment}"
+            
+            # Get current values from config
+            current_id = env_config.get('id', '')
+            capacity_id = env_config.get('capacity')
             
             # Check if workspace exists in Fabric
             workspace_exists_in_fabric = workspace_name in existing_workspaces
             
             print(f"\n{workspace_name}:")
             print(f"  Config ID: {current_id}")
+            if capacity_id and capacity_id != "REPLACE_WITH_YOUR_CAPACITY_ID":
+                print(f"  Capacity: {capacity_id}")
             
             if workspace_exists_in_fabric:
                 # Workspace exists in Fabric - verify/update ID
@@ -231,7 +218,7 @@ def setup_workspaces(dry_run: bool = False) -> None:
                 if current_id != actual_id:
                     print(f"  ⚠️  ID mismatch detected!")
                     if not dry_run:
-                        config[workspace_type][environment] = actual_id
+                        config[workspace_type][environment]['id'] = actual_id
                         updated = True
                         print(f"  ✓ Updated config with actual ID")
                     else:
@@ -245,17 +232,10 @@ def setup_workspaces(dry_run: bool = False) -> None:
                 if not dry_run:
                     description = f"{workspace_type.replace('_', ' ').title()} workspace for {environment.upper()} environment"
                     
-                    # Get capacity ID for this workspace type and environment
-                    capacity_id = None
-                    if capacity_config and workspace_type in capacity_config:
-                        workspace_capacity = capacity_config[workspace_type]
-                        if isinstance(workspace_capacity, dict):
-                            capacity_id = workspace_capacity.get(environment)
-                    
                     workspace_id = manager.create_workspace(workspace_name, description, capacity_id)
                     
-                    # Update configuration with the new ID
-                    config[workspace_type][environment] = workspace_id
+                    # Update configuration with the new ID (keep capacity as-is)
+                    config[workspace_type][environment]['id'] = workspace_id
                     updated = True
                     print(f"  ✓ Created and updated config")
                 else:
@@ -263,7 +243,7 @@ def setup_workspaces(dry_run: bool = False) -> None:
     
     # Save updated configuration
     if updated and not dry_run:
-        save_workspace_config(config, solution_name, capacity_config)
+        save_workspace_config(config, solution_name)
         print("\n✅ All workspaces configured successfully!")
     elif dry_run:
         print("\n✅ Dry run completed. Use without --dry-run to apply changes.")

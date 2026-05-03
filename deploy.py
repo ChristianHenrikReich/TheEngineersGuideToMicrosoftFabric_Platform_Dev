@@ -79,7 +79,11 @@ def get_workspace_id(workspace_type: str, environment: str) -> str:
             f"Environment '{environment}' not found for workspace '{workspace_type}' in {WORKSPACES_CONFIG}"
         )
     
-    return config[workspace_type][environment]
+    # Extract workspace ID from config structure
+    env_config = config[workspace_type][environment]
+    if isinstance(env_config, dict):
+        return env_config.get('id', env_config)
+    return env_config  # Backward compatibility if still a string
 
 
 def get_repository_directory(workspace_type: str) -> Path:

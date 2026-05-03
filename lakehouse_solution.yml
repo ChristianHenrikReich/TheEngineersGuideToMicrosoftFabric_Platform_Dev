@@ -5,37 +5,39 @@
 
 solution_name: main
 
-# Fabric capacity assignment per workspace type and environment
-# Get capacity ID from: Fabric Portal -> Admin Portal -> Capacity Settings
-capacity:
-  ingestion:
-    dev: "REPLACE_WITH_YOUR_CAPACITY_ID"
-    tst: "REPLACE_WITH_YOUR_CAPACITY_ID"
-    prd: "REPLACE_WITH_YOUR_CAPACITY_ID"
-  lakehouse_processing:
-    dev: "REPLACE_WITH_YOUR_CAPACITY_ID"
-    tst: "REPLACE_WITH_YOUR_CAPACITY_ID"
-    prd: "REPLACE_WITH_YOUR_CAPACITY_ID"
-  lakehouse:
-    dev: "REPLACE_WITH_YOUR_CAPACITY_ID"
-    tst: "REPLACE_WITH_YOUR_CAPACITY_ID"
-    prd: "REPLACE_WITH_YOUR_CAPACITY_ID"
-
 workspaces:
   ingestion:
-    dev: "00000000-0000-0000-0000-main-ingestion-dev"
-    tst: "00000000-0000-0000-0000-main-ingestion-tst"
-    prd: "00000000-0000-0000-0000-main-ingestion-prd"
+    dev:
+      id: "00000000-0000-0000-0000-main-ingestion-dev"
+      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
+    tst:
+      id: "00000000-0000-0000-0000-main-ingestion-tst"
+      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
+    prd:
+      id: "00000000-0000-0000-0000-main-ingestion-prd"
+      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
 
   lakehouse_processing:
-    dev: "00000000-0000-0000-0000-main-processing-dev"
-    tst: "00000000-0000-0000-0000-main-processing-tst"
-    prd: "00000000-0000-0000-0000-main-processing-prd"
+    dev:
+      id: "00000000-0000-0000-0000-main-processing-dev"
+      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
+    tst:
+      id: "00000000-0000-0000-0000-main-processing-tst"
+      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
+    prd:
+      id: "00000000-0000-0000-0000-main-processing-prd"
+      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
 
   lakehouse:
-    dev: "00000000-0000-0000-0000-main-lakehouse-dev"
-    tst: "00000000-0000-0000-0000-main-lakehouse-tst"
-    prd: "00000000-0000-0000-0000-main-lakehouse-prd"
+    dev:
+      id: "00000000-0000-0000-0000-main-lakehouse-dev"
+      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
+    tst:
+      id: "00000000-0000-0000-0000-main-lakehouse-tst"
+      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
+    prd:
+      id: "00000000-0000-0000-0000-main-lakehouse-prd"
+      capacity: "REPLACE_WITH_YOUR_CAPACITY_ID"
     # Lakehouse items to create in this workspace
     lakehouses:
       - bronze
