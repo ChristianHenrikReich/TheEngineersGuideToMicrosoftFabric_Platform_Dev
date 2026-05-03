@@ -59,7 +59,7 @@ parameters:
           - deploy_dev
       - name: prd
         displayName: PRD
-        deploy: false
+        deploy: true
         requiresApproval: true
         dependsOn:
           - deploy_tst
