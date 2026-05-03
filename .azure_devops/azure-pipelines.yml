@@ -29,7 +29,7 @@ parameters:
   # Workspace selection
   - name: workspaces
     displayName: Workspaces to Deploy
-    type: objec
+    type: object
     default:
       - name: ingestion
         displayName: Ingestion
@@ -72,145 +72,21 @@ variables:
 stages:
   # Deploy Azure infrastructure (Key Vault, etc.)
   - ${{ each env in parameters.environments }}:
-    - stage: deploy_infrastructure_${{ env.name }}
-      displayName: Deploy Infrastructure - ${{ env.displayName }}
-      condition: eq('${{ env.deploy }}', 'True')
-      dependsOn: []
-      jobs:
-        - ${{ if eq(env.requiresApproval, false) }}:
-          - job: deploy_infra_${{ env.name }}
-            displayName: Deploy Azure Resources
-            pool:
-              vmImage: ubuntu-latest
-            steps:
-              - checkout: self
-              
-              - task: AzureCLI@2
-                displayName: Deploy Bicep template
-                inputs:
-                  azureSubscription: $(azureInfraServiceConnection)
-                  scriptType: bash
-                  scriptLocation: inlineScript
-                  inlineScript: |
-                    echo "Deploying infrastructure to ${{ env.name }} environment..."
-                    az deployment sub create \
-                      --location norwayeast \
-                      --template-file infrastructure/main.bicep \
-                      --parameters infrastructure/parameters/main.${{ env.name }}.bicepparam \
-                      --name "lakehouse-infra-${{ env.name }}-$(Build.BuildId)"
-        
-        - ${{ if eq(env.requiresApproval, true) }}:
-          - deployment: deploy_infra_${{ env.name }}
-            displayName: Deploy Azure Resources
-            environment: fabric-${{ env.name }}
-            pool:
-              vmImage: ubuntu-latest
-            strategy:
-              runOnce:
-                deploy:
-                  steps:
-                    - checkout: self
-                    
-                    - task: AzureCLI@2
-                      displayName: Deploy Bicep template
-                      inputs:
-                        azureSubscription: $(azureInfraServiceConnection)
-                        scriptType: bash
-                        scriptLocation: inlineScript
-                        inlineScript: |
-                          echo "Deploying infrastructure to ${{ env.name }} environment..."
-                          az deployment sub create \
-                            --location swedencentral \
-                            --template-file infrastructure/main.bicep \
-                            --parameters @infrastructure/parameters/main.${{ env.name }}.parameters.json \
-                            --name "lakehouse-infra-${{ env.name }}-$(Build.BuildId)"
+    - template: templates/deploy-infrastructure-stage.yml
+      parameters:
+        environment: ${{ env }}
+        azureInfraServiceConnection: $(azureInfraServiceConnection)
 
   # Setup workspaces and update workspaces.yml
-  - stage: setup_workspaces
-    displayName: Setup Workspaces
-    dependsOn:
-      - ${{ each env in parameters.environments }}:
-        - ${{ if eq(env.deploy, true) }}:
-          - deploy_infrastructure_${{ env.name }}
-    jobs:
-      - job: ensure_workspaces_exist
-        displayName: Ensure workspaces exist
-        pool:
-          vmImage: ubuntu-latest
-        steps:
-          - checkout: self
-            persistCredentials: true
-          
-          - task: UsePythonVersion@0
-            displayName: Setup Python
-            inputs:
-              versionSpec: "$(pythonVersion)"
-          
-          - script: pip install -r requirements-deploy.txt
-            displayName: Install dependencies
-          
-          - task: AzureCLI@2
-            displayName: Setup Fabric workspaces
-            inputs:
-              azureSubscription: $(azureServiceConnection)
-              scriptType: bash
-              scriptLocation: inlineScript
-              inlineScript: |
-                echo "Running setup_workspaces.py to ensure all workspaces exist..."
-                python setup_workspaces.py
-          
-          - script: |
-              git config user.name "Azure DevOps Pipeline"
-              git config user.email "pipeline@azuredevops.com"
-              
-              # Check if workspaces.yml has changes
-              if git diff --quiet workspaces.yml; then
-                echo "No changes to workspaces.yml"
-              else
-                echo "workspaces.yml was updated with workspace IDs"
-                git add workspaces.yml
-                git commit -m "chore: update workspaces.yml with Fabric workspace IDs [skip ci]"
-                git push origin HEAD:$(Build.SourceBranch)
-                echo "Changes committed and pushed"
-              fi
-            displayName: Commit workspaces.yml changes
+  - template: templates/setup-workspaces-stage.yml
+    parameters:
+      environments: ${{ parameters.environments }}
+      pythonVersion: $(pythonVersion)
+      azureServiceConnection: $(azureServiceConnection)
   
-  # Loop over each environment
+  # Deploy Fabric items to each environment
   - ${{ each env in parameters.environments }}:
-    - stage: deploy_${{ env.name }}
-      displayName: Deploy to ${{ env.displayName }}
-      condition: eq('${{ env.deploy }}', 'True')
-      dependsOn:
-        - setup_workspaces
-        - ${{ each dep in env.dependsOn }}:
-          - ${{ dep }}
-      jobs:
-        # Loop over each workspace
-        - ${{ each workspace in parameters.workspaces }}:
-          - ${{ if eq(workspace.deploy, true) }}:
-            # DEV uses regular jobs, TST/PRD use deployment jobs with approval gates
-            - ${{ if eq(env.requiresApproval, false) }}:
-              - job: deploy_${{ workspace.name }}_${{ env.name }}
-                displayName: Deploy ${{ workspace.displayName }}
-                pool:
-                  vmImage: ubuntu-latest
-                steps:
-                  - template: templates/deploy-workspace.yml
-                    parameters:
-                      workspace: ${{ workspace.name }}
-                      environment: ${{ env.name }}
-            
-            - ${{ if eq(env.requiresApproval, true) }}:
-              - deployment: deploy_${{ workspace.name }}_${{ env.name }}
-                displayName: Deploy ${{ workspace.displayName }}
-                environment: fabric-${{ env.name }}
-                pool:
-                  vmImage: ubuntu-latest
-                strategy:
-                  runOnce:
-                    deploy:
-                      steps:
-                        - template: templates/deploy-workspace.yml
-                          parameters:
-                            workspace: ${{ workspace.name }}
-                            environment: ${{ env.name }}
+    - template: templates/deploy-fabric-stage.yml
+      parameters:
+        environment: ${{ env }}
+        workspaces: ${{ parameters.workspaces }}

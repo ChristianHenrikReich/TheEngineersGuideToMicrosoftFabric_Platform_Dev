@@ -1,0 +1,64 @@
+# Template for setting up Fabric workspaces
+#
+# Parameters:
+#   - environments: List of environment objects to determine dependencies
+#   - pythonVersion: Python version to use
+#   - azureServiceConnection: Service connection for Fabric API access
+
+parameters:
+  - name: environments
+    type: object
+  - name: pythonVersion
+    type: string
+  - name: azureServiceConnection
+    type: string
+
+stages:
+  - stage: setup_workspaces
+    displayName: Setup Workspaces
+    dependsOn:
+      - ${{ each env in parameters.environments }}:
+        - ${{ if eq(env.deploy, true) }}:
+          - deploy_infrastructure_${{ env.name }}
+    jobs:
+      - job: ensure_workspaces_exist
+        displayName: Ensure workspaces exist
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - checkout: self
+            persistCredentials: true
+          
+          - task: UsePythonVersion@0
+            displayName: Setup Python
+            inputs:
+              versionSpec: "${{ parameters.pythonVersion }}"
+          
+          - script: pip install -r requirements-deploy.txt
+            displayName: Install dependencies
+          
+          - task: AzureCLI@2
+            displayName: Setup Fabric workspaces
+            inputs:
+              azureSubscription: ${{ parameters.azureServiceConnection }}
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                echo "Running setup_workspaces.py to ensure all workspaces exist..."
+                python setup_workspaces.py
+          
+          - script: |
+              git config user.name "Azure DevOps Pipeline"
+              git config user.email "pipeline@azuredevops.com"
+              
+              # Check if workspaces.yml has changes
+              if git diff --quiet workspaces.yml; then
+                echo "No changes to workspaces.yml"
+              else
+                echo "workspaces.yml was updated with workspace IDs"
+                git add workspaces.yml
+                git commit -m "chore: update workspaces.yml with Fabric workspace IDs [skip ci]"
+                git push origin HEAD:$(Build.SourceBranch)
+                echo "Changes committed and pushed"
+              fi
+            displayName: Commit workspaces.yml changes

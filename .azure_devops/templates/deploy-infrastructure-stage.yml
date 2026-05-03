@@ -1,0 +1,67 @@
+# Template for deploying Azure infrastructure (Bicep)
+# 
+# Parameters:
+#   - environment: Environment object with name, displayName, deploy, requiresApproval
+#   - azureInfraServiceConnection: Service connection for Azure infrastructure deployment
+
+parameters:
+  - name: environment
+    type: object
+  - name: azureInfraServiceConnection
+    type: string
+
+stages:
+  - stage: deploy_infrastructure_${{ parameters.environment.name }}
+    displayName: Deploy Infrastructure - ${{ parameters.environment.displayName }}
+    condition: eq('${{ parameters.environment.deploy }}', 'True')
+    dependsOn: []
+    jobs:
+      # Regular job for environments without approval (e.g., dev)
+      - ${{ if eq(parameters.environment.requiresApproval, false) }}:
+        - job: deploy_infra_${{ parameters.environment.name }}
+          displayName: Deploy Azure Resources
+          pool:
+            vmImage: ubuntu-latest
+          steps:
+            - checkout: self
+            
+            - task: AzureCLI@2
+              displayName: Deploy Bicep template
+              inputs:
+                azureSubscription: ${{ parameters.azureInfraServiceConnection }}
+                scriptType: bash
+                scriptLocation: inlineScript
+                inlineScript: |
+                  echo "Deploying infrastructure to ${{ parameters.environment.name }} environment..."
+                  az deployment sub create \
+                    --location swedencentral \
+                    --template-file infrastructure/main.bicep \
+                    --parameters @infrastructure/parameters/main.${{ parameters.environment.name }}.parameters.json \
+                    --name "lakehouse-infra-${{ parameters.environment.name }}-$(Build.BuildId)"
+      
+      # Deployment job for environments with approval gates (e.g., tst, prd)
+      - ${{ if eq(parameters.environment.requiresApproval, true) }}:
+        - deployment: deploy_infra_${{ parameters.environment.name }}
+          displayName: Deploy Azure Resources
+          environment: fabric-${{ parameters.environment.name }}
+          pool:
+            vmImage: ubuntu-latest
+          strategy:
+            runOnce:
+              deploy:
+                steps:
+                  - checkout: self
+                  
+                  - task: AzureCLI@2
+                    displayName: Deploy Bicep template
+                    inputs:
+                      azureSubscription: ${{ parameters.azureInfraServiceConnection }}
+                      scriptType: bash
+                      scriptLocation: inlineScript
+                      inlineScript: |
+                        echo "Deploying infrastructure to ${{ parameters.environment.name }} environment..."
+                        az deployment sub create \
+                          --location swedencentral \
+                          --template-file infrastructure/main.bicep \
+                          --parameters @infrastructure/parameters/main.${{ parameters.environment.name }}.parameters.json \
+                          --name "lakehouse-infra-${{ parameters.environment.name }}-$(Build.BuildId)"

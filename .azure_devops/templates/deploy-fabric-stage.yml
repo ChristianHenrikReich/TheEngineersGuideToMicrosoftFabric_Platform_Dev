@@ -1,0 +1,51 @@
+# Template for deploying Fabric items to an environment
+#
+# Parameters:
+#   - environment: Environment object with name, displayName, deploy, requiresApproval, dependsOn
+#   - workspaces: List of workspace objects to deploy
+
+parameters:
+  - name: environment
+    type: object
+  - name: workspaces
+    type: object
+
+stages:
+  - stage: deploy_${{ parameters.environment.name }}
+    displayName: Deploy to ${{ parameters.environment.displayName }}
+    condition: eq('${{ parameters.environment.deploy }}', 'True')
+    dependsOn:
+      - setup_workspaces
+      - ${{ each dep in parameters.environment.dependsOn }}:
+        - ${{ dep }}
+    jobs:
+      # Loop over each workspace
+      - ${{ each workspace in parameters.workspaces }}:
+        - ${{ if eq(workspace.deploy, true) }}:
+          # Regular job for environments without approval (e.g., dev)
+          - ${{ if eq(parameters.environment.requiresApproval, false) }}:
+            - job: deploy_${{ workspace.name }}_${{ parameters.environment.name }}
+              displayName: Deploy ${{ workspace.displayName }}
+              pool:
+                vmImage: ubuntu-latest
+              steps:
+                - template: deploy-workspace.yml
+                  parameters:
+                    workspace: ${{ workspace.name }}
+                    environment: ${{ parameters.environment.name }}
+          
+          # Deployment job for environments with approval gates (e.g., tst, prd)
+          - ${{ if eq(parameters.environment.requiresApproval, true) }}:
+            - deployment: deploy_${{ workspace.name }}_${{ parameters.environment.name }}
+              displayName: Deploy ${{ workspace.displayName }}
+              environment: fabric-${{ parameters.environment.name }}
+              pool:
+                vmImage: ubuntu-latest
+              strategy:
+                runOnce:
+                  deploy:
+                    steps:
+                      - template: deploy-workspace.yml
+                        parameters:
+                          workspace: ${{ workspace.name }}
+                          environment: ${{ parameters.environment.name }}
