@@ -53,7 +53,7 @@ parameters:
         dependsOn: []
       - name: tst
         displayName: TST
-        deploy: false
+        deploy: true
         requiresApproval: true
         dependsOn:
           - deploy_dev
