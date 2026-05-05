@@ -69,11 +69,26 @@ class FabricItemManager(FabricClient):
         result = self._api_request("GET", f"/workspaces/{workspace_id}/{self.item_type}")
         return {item["displayName"]: item["id"] for item in result.get("value", [])}
 
-    def create_item(self, workspace_id: str, name: str, description: str = "") -> str:
-        """Create a new item in a workspace."""
+    def create_item(
+        self,
+        workspace_id: str,
+        name: str,
+        description: str = "",
+        creation_payload: dict | None = None,
+    ) -> str:
+        """Create a new item in a workspace.
+        
+        Args:
+            workspace_id: Target workspace ID.
+            name: Display name for the item.
+            description: Optional description.
+            creation_payload: Optional creation-specific payload (e.g., enableSchemas for lakehouses).
+        """
         payload: dict = {"displayName": name}
         if description:
             payload["description"] = description
+        if creation_payload:
+            payload["creationPayload"] = creation_payload
 
         result = self._api_request(
             "POST", f"/workspaces/{workspace_id}/{self.item_type}", json_data=payload
@@ -86,9 +101,19 @@ class FabricItemManager(FabricClient):
         return item_id
 
     def get_or_create_item(
-        self, workspace_id: str, name: str, description: str = ""
+        self,
+        workspace_id: str,
+        name: str,
+        description: str = "",
+        creation_payload: dict | None = None,
     ) -> tuple[str, bool]:
         """Get existing item ID or create a new item.
+
+        Args:
+            workspace_id: Target workspace ID.
+            name: Display name for the item.
+            description: Optional description.
+            creation_payload: Optional creation-specific payload (e.g., enableSchemas for lakehouses).
 
         Returns:
             Tuple of (item_id, was_created).
@@ -98,7 +123,7 @@ class FabricItemManager(FabricClient):
             print(f"✓ Found existing {self.singular}: {name} ({items[name]})")
             return items[name], False
 
-        return self.create_item(workspace_id, name, description), True
+        return self.create_item(workspace_id, name, description, creation_payload), True
 
 
 def _resolve_aliases(data: dict | list | str, aliases: dict) -> dict | list | str:
@@ -236,16 +261,25 @@ def setup_workspace_items(
     item_names = get_workspace_item_names(workspace_type, item_key)
     manager = FabricItemManager(item_type)
 
+    # Enable schemas for lakehouses
+    creation_payload = None
+    if item_type == "lakehouses":
+        creation_payload = {"enableSchemas": True}
+
     print(f"\n{'=' * 70}")
     print(f"Setting up {item_type} for {environment.upper()} environment")
     print(f"Workspace ID: {workspace_id}")
     print(f"{item_type.title()} to create: {', '.join(item_names)}")
+    if creation_payload:
+        print(f"Creation options: {creation_payload}")
     print(f"{'=' * 70}\n")
 
     created_count = 0
     for name in item_names:
         description = f"{name.title()} {manager.singular} for {environment.upper()} environment"
-        _, was_created = manager.get_or_create_item(workspace_id, name, description)
+        _, was_created = manager.get_or_create_item(
+            workspace_id, name, description, creation_payload
+        )
         if was_created:
             created_count += 1
 
