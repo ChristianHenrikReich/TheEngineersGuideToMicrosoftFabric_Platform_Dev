@@ -6,8 +6,8 @@
 solution_name: main
 
 alias:
-  default_capacity: "eee3bfce-0dc0-440d-8dfd-cd8d88e28d6e"
-  default_admin_group: "a9d50da5-198f-4197-aed3-44d76b0c3973"
+  default_capacity: "11da5810-fb24-4b84-934b-47d48bd893b4"
+  default_admin_group: "9327d50c-0e13-43aa-b055-7d62ef2ddae0"
 
 workspaces:
   ingestion:
