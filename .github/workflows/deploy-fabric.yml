@@ -38,8 +38,6 @@ permissions:
 jobs:
   deploy_infrastructure:
     runs-on: ubuntu-latest
-    # For push events, deploy to dev. For manual triggers, use selected environment.
-    environment: ${{ github.event_name == 'push' && 'fabric-dev' || format('fabric-{0}', inputs.environments) }}
     steps:
       - uses: actions/checkout@v4
       
@@ -162,7 +160,6 @@ jobs:
     needs: setup
     if: fromJSON(needs.setup.outputs.matrix).include[0] != null
     runs-on: ubuntu-latest
-    environment: ${{ matrix.env_name }}
     strategy:
       fail-fast: false
       max-parallel: 3
