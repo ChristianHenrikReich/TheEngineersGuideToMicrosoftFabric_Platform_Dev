@@ -101,19 +101,20 @@ jobs:
       
       - name: Commit lakehouse_solution.yml changes
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          
-          # Check if lakehouse_solution.yml has changes
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           if git diff --quiet lakehouse_solution.yml; then
             echo "No changes to lakehouse_solution.yml"
-          else
-            echo "lakehouse_solution.yml was updated with workspace IDs"
-            git add lakehouse_solution.yml
-            git commit -m "chore: update lakehouse_solution.yml with Fabric workspace IDs [skip ci]"
-            git push
-            echo "Changes committed and pushed"
+            exit 0
           fi
+
+          echo "lakehouse_solution.yml was updated with workspace IDs"
+          git add lakehouse_solution.yml
+          git commit -m "chore: update lakehouse_solution.yml with Fabric workspace IDs [skip ci]"
+          git push origin "HEAD:${GITHUB_REF#refs/heads/}"
+          echo "Changes committed and pushed"
 
   setup:
     needs: setup_workspaces
