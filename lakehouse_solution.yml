@@ -7,49 +7,49 @@ solution_name: main
 workspaces:
   ingestion:
     dev:
-      id: b11d6050-4676-472b-b618-294478b67c28
+      id: af4f17e2-63d4-409c-ac5e-d1e7381de0f2
       capacity: 23ac3dcc-24b7-4e1d-adb0-2140c522ced7
       administrators:
       - 9327d50c-0e13-43aa-b055-7d62ef2ddae0
     tst:
-      id: 019e4cf8-e5a2-48b5-b6cd-e03d94358610
+      id: 0520baff-436c-4e86-959a-32bcb0db0433
       capacity: 23ac3dcc-24b7-4e1d-adb0-2140c522ced7
       administrators:
       - 9327d50c-0e13-43aa-b055-7d62ef2ddae0
     prd:
-      id: a8dae736-5a76-44d6-a9f2-691c239945c8
+      id: 433a006d-fa34-4a64-9376-07f1301a07db
       capacity: 23ac3dcc-24b7-4e1d-adb0-2140c522ced7
       administrators:
       - 9327d50c-0e13-43aa-b055-7d62ef2ddae0
   lakehouse_processing:
     dev:
-      id: 4d54bc08-3940-4fa2-820a-95025a8c64dc
+      id: 3d965a1b-4553-40a0-89c2-adc8516e53f1
       capacity: 23ac3dcc-24b7-4e1d-adb0-2140c522ced7
       administrators:
       - 9327d50c-0e13-43aa-b055-7d62ef2ddae0
     tst:
-      id: 88df1112-2d72-46a0-8889-b3f410a29a33
+      id: e0368f35-8bb4-40ad-89b5-c5e9ad3457ad
       capacity: 23ac3dcc-24b7-4e1d-adb0-2140c522ced7
       administrators:
       - 9327d50c-0e13-43aa-b055-7d62ef2ddae0
     prd:
-      id: 46ea1224-eae6-4389-8402-4e02fd7dc276
+      id: 3310b283-60b6-421f-899f-0e4430a27a31
       capacity: 23ac3dcc-24b7-4e1d-adb0-2140c522ced7
       administrators:
       - 9327d50c-0e13-43aa-b055-7d62ef2ddae0
   lakehouse:
     dev:
-      id: e1a12ab4-8697-49f6-8689-a707f0c399f2
+      id: cd0d796d-7c51-4231-89d7-3fe4238c60c4
       capacity: 23ac3dcc-24b7-4e1d-adb0-2140c522ced7
       administrators:
       - 9327d50c-0e13-43aa-b055-7d62ef2ddae0
     tst:
-      id: 160f7968-e784-421d-9312-927952a2010c
+      id: 348c916a-f093-498d-8088-14ec24fa226c
       capacity: 23ac3dcc-24b7-4e1d-adb0-2140c522ced7
       administrators:
       - 9327d50c-0e13-43aa-b055-7d62ef2ddae0
     prd:
-      id: 270e3b2d-976d-465f-b872-0d4b9563a8bc
+      id: cd9234a5-4c04-4539-8a4d-18269d4ffce5
       capacity: 23ac3dcc-24b7-4e1d-adb0-2140c522ced7
       administrators:
       - 9327d50c-0e13-43aa-b055-7d62ef2ddae0
