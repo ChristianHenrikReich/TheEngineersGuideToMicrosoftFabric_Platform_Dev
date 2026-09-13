@@ -53,6 +53,22 @@ workspaces:
       capacity: 23ac3dcc-24b7-4e1d-adb0-2140c522ced7
       administrators:
       - 9327d50c-0e13-43aa-b055-7d62ef2ddae0
+  reporting:
+    dev:
+      id: 
+      capacity: 23ac3dcc-24b7-4e1d-adb0-2140c522ced7
+      administrators:
+      - 9327d50c-0e13-43aa-b055-7d62ef2ddae0
+    tst:
+      id: 
+      capacity: 23ac3dcc-24b7-4e1d-adb0-2140c522ced7
+      administrators:
+      - 9327d50c-0e13-43aa-b055-7d62ef2ddae0
+    prd:
+      id: 
+      capacity: 23ac3dcc-24b7-4e1d-adb0-2140c522ced7
+      administrators:
+      - 9327d50c-0e13-43aa-b055-7d62ef2ddae0
   lakehouse:
     dev:
       id: cd0d796d-7c51-4231-89d7-3fe4238c60c4
