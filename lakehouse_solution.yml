@@ -39,17 +39,17 @@ workspaces:
       - 9327d50c-0e13-43aa-b055-7d62ef2ddae0
   orchestration:
     dev:
-      id: 
+      id: c3752361-a525-4a91-9c98-9f4b69775d3c
       capacity: 23ac3dcc-24b7-4e1d-adb0-2140c522ced7
       administrators:
       - 9327d50c-0e13-43aa-b055-7d62ef2ddae0
     tst:
-      id: 
+      id: c3f04f65-86f9-44c8-af1b-b63e8546e308
       capacity: 23ac3dcc-24b7-4e1d-adb0-2140c522ced7
       administrators:
       - 9327d50c-0e13-43aa-b055-7d62ef2ddae0
     prd:
-      id: 
+      id: 000e4293-6b53-4154-8fdc-d75705686a70
       capacity: 23ac3dcc-24b7-4e1d-adb0-2140c522ced7
       administrators:
       - 9327d50c-0e13-43aa-b055-7d62ef2ddae0
