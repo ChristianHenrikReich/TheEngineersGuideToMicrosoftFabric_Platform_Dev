@@ -1,5 +1,57 @@
 {
   "properties": {
-    "activities": []
+    "activities": [
+      {
+        "name": "Ingestion",
+        "type": "InvokePipeline",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "waitOnCompletion": true,
+          "operationType": "InvokeFabricPipeline",
+          "pipelineId": "52807a29-dcd4-4d2d-b1db-ef74bdd3acb8",
+          "workspaceId": "af4f17e2-63d4-409c-ac5e-d1e7381de0f2",
+          "parameters": {}
+        },
+        "externalReferences": {
+          "connection": "9581bdbd-b62d-4c13-b6ea-0b9abc4f4cd5"
+        }
+      },
+      {
+        "name": "process lakehouse",
+        "type": "InvokePipeline",
+        "dependsOn": [
+          {
+            "activity": "Ingestion",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "waitOnCompletion": true,
+          "operationType": "InvokeFabricPipeline",
+          "pipelineId": "04ba17c7-60f9-4431-a52d-3ceaa35482cc",
+          "workspaceId": "3d965a1b-4553-40a0-89c2-adc8516e53f1",
+          "parameters": {}
+        },
+        "externalReferences": {
+          "connection": "9581bdbd-b62d-4c13-b6ea-0b9abc4f4cd5"
+        }
+      }
+    ]
   }
 }
