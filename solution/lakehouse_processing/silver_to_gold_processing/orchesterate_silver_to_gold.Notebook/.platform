@@ -1,12 +1,11 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
   "metadata": {
-    "type": "DataPipeline",
-    "displayName": "orchestrate",
-    "description": ""
+    "type": "Notebook",
+    "displayName": "orchesterate_silver_to_gold"
   },
   "config": {
     "version": "2.0",
-    "logicalId": "40de9807-4648-a25b-44e9-4206528e4614"
+    "logicalId": "9e1d250c-f839-af1b-4cea-bee702db2075"
   }
 }
