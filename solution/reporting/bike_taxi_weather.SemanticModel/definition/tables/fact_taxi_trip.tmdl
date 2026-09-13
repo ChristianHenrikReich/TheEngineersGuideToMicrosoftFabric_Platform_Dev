@@ -1,0 +1,188 @@
+table fact_taxi_trip
+	lineageTag: d08a577d-fe0f-4d94-9260-d6489927feb6
+	sourceLineageTag: [dbo].[fact_taxi_trip]
+
+	column trip_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 5cfcc728-3ada-4784-97b2-0a8bd84fff3c
+		sourceLineageTag: trip_sk
+		summarizeBy: none
+		sourceColumn: trip_sk
+
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
+
+	column pickup_date_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 4a62dade-ab4f-473f-95db-9c5967140fc9
+		sourceLineageTag: pickup_date_sk
+		summarizeBy: none
+		sourceColumn: pickup_date_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column pickup_time_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: f220c984-b4ad-4cb3-92b8-cb7b0d776027
+		sourceLineageTag: pickup_time_sk
+		summarizeBy: none
+		sourceColumn: pickup_time_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column dropoff_date_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: da60bca1-c674-4573-9e67-b0cda8490d6c
+		sourceLineageTag: dropoff_date_sk
+		summarizeBy: none
+		sourceColumn: dropoff_date_sk
+
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
+
+	column dropoff_time_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: d9c0ad5d-29e4-4765-9a17-55334acc7448
+		sourceLineageTag: dropoff_time_sk
+		summarizeBy: none
+		sourceColumn: dropoff_time_sk
+
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
+
+	column pickup_location_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 098b5132-1c98-42e6-9b6a-c320a05d9b29
+		sourceLineageTag: pickup_location_id
+		summarizeBy: none
+		sourceColumn: pickup_location_id
+
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
+
+	column dropoff_location_id
+		dataType: int64
+		formatString: 0
+		lineageTag: eb69f988-dba4-44ed-8e61-39ac6b8c1554
+		sourceLineageTag: dropoff_location_id
+		summarizeBy: none
+		sourceColumn: dropoff_location_id
+
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
+
+	column vendor_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 7b0e07a5-c270-4fbd-8727-cdc179d4ffa9
+		sourceLineageTag: vendor_id
+		summarizeBy: none
+		sourceColumn: vendor_id
+
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
+
+	column passenger_count
+		dataType: int64
+		formatString: 0
+		lineageTag: 01f36048-fe77-4994-acc5-d4e044d1cf32
+		sourceLineageTag: passenger_count
+		summarizeBy: sum
+		sourceColumn: passenger_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column trip_distance
+		dataType: double
+		lineageTag: 33d47d87-b170-4648-ab9e-039073429c70
+		sourceLineageTag: trip_distance
+		summarizeBy: sum
+		sourceColumn: trip_distance
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column fare_amount
+		dataType: double
+		lineageTag: 16c5e525-dbd5-4d22-8879-0346ab227191
+		sourceLineageTag: fare_amount
+		summarizeBy: sum
+		sourceColumn: fare_amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column tip_amount
+		dataType: double
+		lineageTag: 8f64085c-d235-4b29-a0a6-3131ceb41519
+		sourceLineageTag: tip_amount
+		summarizeBy: sum
+		sourceColumn: tip_amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column tolls_amount
+		dataType: double
+		lineageTag: e4efc9ac-713b-43aa-ad81-982e0ffb63f8
+		sourceLineageTag: tolls_amount
+		summarizeBy: sum
+		sourceColumn: tolls_amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column total_amount
+		dataType: double
+		lineageTag: 841bcee8-ad02-4e56-9b96-a53199fd9f45
+		sourceLineageTag: total_amount
+		summarizeBy: sum
+		sourceColumn: total_amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column payment_type
+		dataType: int64
+		formatString: 0
+		lineageTag: 12319958-a463-4e67-9af2-5c037a977dc4
+		sourceLineageTag: payment_type
+		summarizeBy: sum
+		sourceColumn: payment_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column trip_duration_seconds
+		dataType: int64
+		formatString: 0
+		lineageTag: b83dd34d-dee6-4d62-8149-f6323eaa17f1
+		sourceLineageTag: trip_duration_seconds
+		summarizeBy: sum
+		sourceColumn: trip_duration_seconds
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_taxi_trip = entity
+		mode: directLake
+		source
+			entityName: fact_taxi_trip
+			schemaName: dbo
+			expressionSource: 'DirectLake - gold'
+

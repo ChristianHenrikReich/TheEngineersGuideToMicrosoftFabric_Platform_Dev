@@ -1,0 +1,34 @@
+relationship cadaf9c0-3984-8d29-04ea-3db19ebe0446
+	fromColumn: fact_taxi_trip.pickup_time_sk
+	toColumn: dim_time.time_sk
+
+relationship d51a560d-bf28-51c4-e317-0c74f90d1e43
+	fromColumn: fact_taxi_trip.pickup_date_sk
+	toColumn: dim_date.date_sk
+
+relationship 40dce2e3-0ecb-4c7f-46c3-7b92e5a42b27
+	isActive: false
+	fromColumn: fact_taxi_trip.dropoff_date_sk
+	toColumn: dim_date.date_sk
+
+relationship 6b80aeea-d700-7d9e-f6e8-e8979bf32baf
+	isActive: false
+	fromColumn: fact_taxi_trip.dropoff_time_sk
+	toColumn: dim_time.time_sk
+
+relationship 71749984-2bea-9c5f-9495-7afd11c74e9b
+	fromColumn: fact_weather_observation.date_sk
+	toColumn: dim_date.date_sk
+
+relationship 140f016d-ed2d-f674-042f-fb304df27905
+	fromColumn: fact_weather_observation.time_sk
+	toColumn: dim_time.time_sk
+
+relationship e3d37ee9-12d6-27c7-19a1-440aa0b853a2
+	fromColumn: fact_weather_observation.station_sk
+	toColumn: dim_bike_station.station_sk
+
+relationship 58304f84-80ea-c0c5-039b-56ac24846d96
+	fromColumn: fact_weather_observation.weather_sk
+	toColumn: dim_weather_station.station_sk
+

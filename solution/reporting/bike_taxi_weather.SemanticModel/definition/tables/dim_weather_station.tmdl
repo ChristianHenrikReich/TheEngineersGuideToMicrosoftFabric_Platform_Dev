@@ -1,0 +1,78 @@
+table dim_weather_station
+	lineageTag: 08a2e097-1494-4566-8dbc-388f2454cfc9
+	sourceLineageTag: [dbo].[dim_weather_station]
+
+	column station_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: b3f31745-21e5-4658-9f1c-8fb1a88a9089
+		sourceLineageTag: station_sk
+		summarizeBy: none
+		sourceColumn: station_sk
+
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
+
+	column station_id
+		dataType: string
+		lineageTag: b2ae9e8d-760b-499d-8dbd-c19eec28b96d
+		sourceLineageTag: station_id
+		summarizeBy: none
+		sourceColumn: station_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column station_name
+		dataType: string
+		lineageTag: 8817fbe0-35e4-4af3-8bb1-8c0ec753ec99
+		sourceLineageTag: station_name
+		summarizeBy: none
+		sourceColumn: station_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column latitude
+		dataType: double
+		lineageTag: 30bde1f9-d860-43bd-8fb0-bfb7aefe5c7c
+		sourceLineageTag: latitude
+		summarizeBy: none
+		sourceColumn: latitude
+
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column longitude
+		dataType: double
+		lineageTag: 014ecd25-793b-4618-a0ca-98298c87ce9f
+		sourceLineageTag: longitude
+		summarizeBy: none
+		sourceColumn: longitude
+
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column elevation
+		dataType: double
+		lineageTag: d54038b8-3265-4790-8046-dd24bcc90665
+		sourceLineageTag: elevation
+		summarizeBy: none
+		sourceColumn: elevation
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition dim_weather_station = entity
+		mode: directLake
+		source
+			entityName: dim_weather_station
+			schemaName: dbo
+			expressionSource: 'DirectLake - gold'
+

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "bike_taxi_weather"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "f7756980-5587-ab70-45f5-8282c3bea827"
+  }
+}

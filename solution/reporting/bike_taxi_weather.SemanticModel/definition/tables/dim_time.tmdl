@@ -1,0 +1,50 @@
+table dim_time
+	lineageTag: 509d3394-7935-4112-b20b-69459df3564a
+	sourceLineageTag: [dbo].[dim_time]
+
+	column time_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: e7be4990-bda2-421d-aabe-d39bc144c4b9
+		sourceLineageTag: time_sk
+		summarizeBy: none
+		sourceColumn: time_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column hour
+		dataType: int64
+		formatString: 0
+		lineageTag: 9c9a640f-bdde-4e6f-8973-0c97e7c82feb
+		sourceLineageTag: hour
+		summarizeBy: sum
+		sourceColumn: hour
+
+		annotation SummarizationSetBy = Automatic
+
+	column minute
+		dataType: int64
+		formatString: 0
+		lineageTag: c80ea9df-8e05-46e3-8815-a83b8668965e
+		sourceLineageTag: minute
+		summarizeBy: sum
+		sourceColumn: minute
+
+		annotation SummarizationSetBy = Automatic
+
+	column part_of_day
+		dataType: string
+		lineageTag: 740f80ee-e513-4f46-b0a3-6ca43df7ba08
+		sourceLineageTag: part_of_day
+		summarizeBy: none
+		sourceColumn: part_of_day
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_time = entity
+		mode: directLake
+		source
+			entityName: dim_time
+			schemaName: dbo
+			expressionSource: 'DirectLake - gold'
+

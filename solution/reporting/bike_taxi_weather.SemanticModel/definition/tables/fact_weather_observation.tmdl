@@ -1,0 +1,101 @@
+table fact_weather_observation
+	lineageTag: 5c6308e2-885c-4fb8-bd33-507df47da184
+	sourceLineageTag: [dbo].[dim_tfact_weather_observationime]
+
+	column weather_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 3dc572c0-0335-4eb8-99ff-f0cd9c2602c4
+		sourceLineageTag: weather_sk
+		summarizeBy: none
+		sourceColumn: weather_sk
+
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
+
+	column station_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 14f14d68-6275-4b42-a7a2-6dca4c0082b7
+		sourceLineageTag: station_sk
+		summarizeBy: none
+		sourceColumn: station_sk
+
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
+
+	column date_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 03a07ea9-e951-4df3-8c7f-9ccd69cddfef
+		sourceLineageTag: date_sk
+		summarizeBy: none
+		sourceColumn: date_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column time_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: b5590825-7527-4d76-94bf-e95bf060e1ca
+		sourceLineageTag: time_sk
+		summarizeBy: none
+		sourceColumn: time_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column temperature
+		dataType: double
+		lineageTag: b0ab9c52-3283-4a2a-aa29-a333abf18677
+		sourceLineageTag: temperature
+		summarizeBy: sum
+		sourceColumn: temperature
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column dew_point_temperature
+		dataType: double
+		lineageTag: b5693b1b-aead-437e-8a16-4ee3187b305e
+		sourceLineageTag: dew_point_temperature
+		summarizeBy: sum
+		sourceColumn: dew_point_temperature
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column station_level_pressure
+		dataType: double
+		lineageTag: 944c8b8a-47eb-4936-bf48-cd578b058433
+		sourceLineageTag: station_level_pressure
+		summarizeBy: sum
+		sourceColumn: station_level_pressure
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column altimeter
+		dataType: double
+		lineageTag: 0abb7ec9-297f-40af-8d5b-2d5986de8aab
+		sourceLineageTag: altimeter
+		summarizeBy: sum
+		sourceColumn: altimeter
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition fact_weather_observation = entity
+		mode: directLake
+		source
+			entityName: dim_tfact_weather_observationime
+			schemaName: dbo
+			expressionSource: 'DirectLake - gold'
+
+	changedProperty = Name
+

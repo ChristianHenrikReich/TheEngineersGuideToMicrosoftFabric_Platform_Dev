@@ -1,0 +1,67 @@
+table dim_bike_station
+	lineageTag: a378c08c-477a-470f-a273-f2a4b7e081d4
+	sourceLineageTag: [dbo].[dim_bike_station]
+
+	column station_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 16927ca4-ef83-4442-a77d-f144f6021261
+		sourceLineageTag: station_sk
+		summarizeBy: none
+		sourceColumn: station_sk
+
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
+
+	column station_id
+		dataType: string
+		lineageTag: 5e389a3c-a70f-46d9-aac5-85ac96b4d0bd
+		sourceLineageTag: station_id
+		summarizeBy: none
+		sourceColumn: station_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column station_name
+		dataType: string
+		lineageTag: a3fd94de-b636-4ef2-ab93-505282542998
+		sourceLineageTag: station_name
+		summarizeBy: none
+		sourceColumn: station_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column latitude
+		dataType: double
+		lineageTag: 34119c17-c91b-4cdb-aafb-6c70df83be88
+		sourceLineageTag: latitude
+		summarizeBy: none
+		sourceColumn: latitude
+
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column longitude
+		dataType: double
+		lineageTag: 21045a86-8fa5-428a-8b9e-d3044386ce3c
+		sourceLineageTag: longitude
+		summarizeBy: none
+		sourceColumn: longitude
+
+		changedProperty = SummarizeBy
+
+		annotation SummarizationSetBy = User
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition dim_bike_station = entity
+		mode: directLake
+		source
+			entityName: dim_bike_station
+			schemaName: dbo
+			expressionSource: 'DirectLake - gold'
+
