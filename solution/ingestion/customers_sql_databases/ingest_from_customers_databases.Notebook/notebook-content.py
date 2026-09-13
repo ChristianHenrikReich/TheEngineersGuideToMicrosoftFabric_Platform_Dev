@@ -25,7 +25,7 @@
 # CELL ********************
 
 key_vault_name = "https://mugatokvdev2xdvgsdb4sxne.vault.azure.net/"
-connection_secret_name = "FabricReader-Dev-Dev"
+connection_secret_name = "FabricReader-Dev-Dev-Dev"
 
 
 # METADATA ********************
