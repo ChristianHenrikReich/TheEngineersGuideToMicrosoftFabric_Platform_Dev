@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "bike_taxi_weather_report"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "512ba386-1262-bf2d-420a-166534e75a74"
+  }
+}
