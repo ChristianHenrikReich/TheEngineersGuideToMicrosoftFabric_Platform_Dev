@@ -1,12 +1,11 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
   "metadata": {
-    "type": "Notebook",
-    "displayName": "ingest_from_customers_databases",
-    "description": ""
+    "type": "DataPipeline",
+    "displayName": "orchestrate"
   },
   "config": {
     "version": "2.0",
-    "logicalId": "1241823d-a35d-baf5-4af7-c51b29a454f9"
+    "logicalId": "40de9807-4648-a25b-44e9-4206528e4614"
   }
 }
