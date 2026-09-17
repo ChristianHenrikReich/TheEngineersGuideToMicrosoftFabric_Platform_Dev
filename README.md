@@ -17,7 +17,8 @@ During CI/CD deployment, you specify both the workspace type and the environment
 
 ## Repository layout
 
-\`\`\`infrastructure/
+```
+infrastructure/
   main.bicep                # Main infrastructure template (subscription-scoped)
   modules/
     keyvault.bicep          # Key Vault module
